@@ -1,0 +1,15 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: dg-gold-web:latest
+    # Target arch of the VPS. Remove if building on the server itself.
+    platform: linux/amd64
+    ports:
+      - "3000:3000"
+    environment:
+      # Backend gateways — override per environment when they move.
+      IDP_BASE_URL: ${IDP_BASE_URL:-https://dg-nginx.darkube.ir/idp}
+      SHOP_BASE_URL: ${SHOP_BASE_URL:-https://dg-nginx.darkube.ir/shop}
+    restart: unless-stopped

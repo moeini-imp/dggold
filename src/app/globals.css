@@ -1,26 +1,99 @@
 @import "tailwindcss";
 
+/*
+  DG Gold — Design System tokens
+  Primary = teal (brand/action), gold = accent, neutral grays.
+  Red = destructive only, green = success only.
+*/
+
+@theme {
+  /* Brand: teal scale */
+  --color-teal-50: #eef6f5;
+  --color-teal-100: #d6e9e6;
+  --color-teal-200: #aed3cd;
+  --color-teal-300: #7eb6ae;
+  --color-teal-400: #4f9890;
+  --color-teal-500: #2c7d74;
+  --color-teal-600: #1c6b63; /* primary */
+  --color-teal-700: #155650;
+  --color-teal-800: #114e49;
+  --color-teal-900: #0d3a36;
+
+  /* Accent: gold scale */
+  --color-gold-50: #fcf7e8;
+  --color-gold-100: #f7ecc6;
+  --color-gold-200: #efd98c;
+  --color-gold-300: #e8c66b;
+  --color-gold-400: #d8b052;
+  --color-gold-500: #c9a24b;
+  --color-gold-600: #a8842f;
+
+  /* Neutrals */
+  --color-ink: #2a2a2a;
+  --color-muted: #8a9096;
+  --color-line: #ececef;
+  --color-surface: #ffffff;
+  --color-canvas: #f4f5f6;
+
+  /* Semantic */
+  --color-primary: var(--color-teal-600);
+  --color-primary-hover: var(--color-teal-700);
+  --color-accent: var(--color-gold-500);
+  --color-danger: #e0524d;
+  --color-success: #3fae6a;
+
+  /* Radii */
+  --radius-card: 16px;
+  --radius-btn: 12px;
+  --radius-hero: 24px;
+
+  /* Shadows */
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.06);
+  --shadow-pop: 0 8px 32px rgba(0, 0, 0, 0.12);
+
+  /* Fonts (wired in layout.tsx via next/font) */
+  --font-sans: var(--font-vazir), system-ui, sans-serif;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: var(--color-canvas);
+  --foreground: var(--color-ink);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+  border-color: var(--color-line);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  -webkit-text-size-adjust: 100%;
+  /* The page must never scroll horizontally. `clip` (unlike `hidden`) does
+     not create a scroll container, so position:sticky keeps working. */
+  overflow-x: clip;
+}
+
+body {
+  overflow-x: clip;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  /* Persian text reads better with a touch more leading */
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Tabular numerals for prices so digits align */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Hide scrollbars on horizontal carousels but keep scrollability */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
