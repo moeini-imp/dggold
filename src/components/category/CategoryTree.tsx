@@ -1,20 +1,20 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { ChevronDown, ChevronLeft } from "@/components/ui/icons";
 import { toPersianDigits } from "@/lib/format";
-import type { ShopCategory } from "@/lib/shop/category";
+import type { CategoryTreeNode } from "@/lib/shop/category";
 
 const VISIBLE_SUBS = 3;
 
-function CategoryAvatar({ category }: { category: ShopCategory }) {
-  if (category.imageUrl && !category.imageUrl.startsWith("placeholder:")) {
+function CategoryAvatar({ node }: { node: CategoryTreeNode }) {
+  if (node.imageUrl && !node.imageUrl.startsWith("placeholder:")) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
-        src={category.imageUrl}
-        alt={category.name}
+        src={node.imageUrl}
+        alt={node.name}
         className="h-full w-full object-contain p-1.5"
       />
     );
@@ -27,17 +27,17 @@ function CategoryAvatar({ category }: { category: ShopCategory }) {
   );
 }
 
-function CategoryRow({ category }: { category: ShopCategory }) {
+function CategoryRow({ node }: { node: CategoryTreeNode }) {
   return (
     <Link
-      href={`/category/${encodeURIComponent(category.name)}?cid=${category.id}`}
+      href={`/category/${encodeURIComponent(node.name)}?cid=${node.id}`}
       className="flex items-center gap-3 rounded-card border border-line bg-surface p-3 transition hover:border-teal-300"
     >
       <span className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-xl bg-canvas">
-        <CategoryAvatar category={category} />
+        <CategoryAvatar node={node} />
       </span>
       <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink">
-        {category.name}
+        {node.name}
       </span>
       <ChevronLeft className="h-4 w-4 shrink-0 text-muted" />
     </Link>
@@ -45,35 +45,14 @@ function CategoryRow({ category }: { category: ShopCategory }) {
 }
 
 /**
- * Vertical category tree: each parent is a section; up to 3 subcategories
- * are visible, the rest expand with "مشاهده بیشتر".
+ * Vertical category tree (Category/Tree): each top-level node is a section;
+ * up to 3 children are visible, the rest expand with "مشاهده بیشتر". Nodes
+ * with no children (leaf top-level categories) just show the header link.
  */
-export function CategoryTree({ categories }: { categories: ShopCategory[] }) {
-  const groups = useMemo(() => {
-    const byId = new Map(categories.map((c) => [c.id, c]));
-    // A parent is a category whose id is referenced by others, or which has
-    // no parent itself. Children keyed by parentId.
-    const children = new Map<number, ShopCategory[]>();
-    for (const c of categories) {
-      if (c.parentId != null && byId.has(c.parentId) && c.parentId !== c.id) {
-        const list = children.get(c.parentId) ?? [];
-        list.push(c);
-        children.set(c.parentId, list);
-      }
-    }
-    const parents = categories.filter(
-      (c) =>
-        children.has(c.id) ||
-        c.parentId == null ||
-        !byId.has(c.parentId) ||
-        c.parentId === c.id,
-    );
-    return parents.map((p) => ({ parent: p, subs: children.get(p.id) ?? [] }));
-  }, [categories]);
-
+export function CategoryTree({ nodes }: { nodes: CategoryTreeNode[] }) {
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
 
-  if (!groups.length) {
+  if (!nodes.length) {
     return (
       <p className="py-16 text-center text-muted">دسته‌بندی‌ای یافت نشد.</p>
     );
@@ -81,7 +60,8 @@ export function CategoryTree({ categories }: { categories: ShopCategory[] }) {
 
   return (
     <div className="space-y-6">
-      {groups.map(({ parent, subs }) => {
+      {nodes.map((parent) => {
+        const subs = parent.children;
         const isOpen = !!expanded[parent.id];
         const shown = isOpen ? subs : subs.slice(0, VISIBLE_SUBS);
         const hiddenCount = subs.length - VISIBLE_SUBS;
@@ -95,7 +75,7 @@ export function CategoryTree({ categories }: { categories: ShopCategory[] }) {
             >
               <span className="flex min-w-0 items-center gap-3">
                 <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-xl bg-surface/10">
-                  <CategoryAvatar category={parent} />
+                  <CategoryAvatar node={parent} />
                 </span>
                 <span className="truncate font-extrabold">{parent.name}</span>
               </span>
@@ -109,7 +89,7 @@ export function CategoryTree({ categories }: { categories: ShopCategory[] }) {
             {subs.length ? (
               <div className="space-y-2">
                 {shown.map((s) => (
-                  <CategoryRow key={s.id} category={s} />
+                  <CategoryRow key={s.id} node={s} />
                 ))}
 
                 {hiddenCount > 0 && !isOpen ? (

@@ -12,7 +12,6 @@ import {
 
 const navLinks = [
   { href: "/categories", label: "دسته‌بندی محصولات", caret: true },
-  { href: "/shop", label: "فروشگاه" },
   { href: "/contact", label: "تماس با ما" },
 ];
 

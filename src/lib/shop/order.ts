@@ -13,7 +13,12 @@ export interface AddOrderData {
   paymentIntentId: string;
   status: string;
   amount: number;
-  gatewayUrl: string;
+  /** Where to send the user to complete payment. */
+  redirectUrl: string;
+  /** "GET" → navigate directly. "POST" → submit `formFields` as a form. */
+  redirectMethod: "GET" | "POST" | string;
+  /** Hidden form fields required when redirectMethod is "POST" (e.g. تارا). */
+  formFields: Record<string, string>;
   createdAtUtc?: string;
 }
 

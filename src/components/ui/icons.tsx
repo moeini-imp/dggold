@@ -140,6 +140,20 @@ export const PackageIcon = (p: P) => (
   </svg>
 );
 
+export const PinIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M12 21s-7-6.1-7-11.5A7 7 0 0 1 19 9.5C19 14.9 12 21 12 21Z" />
+    <circle cx="12" cy="9.5" r="2.5" />
+  </svg>
+);
+
+export const ClockIcon = (p: P) => (
+  <svg {...base(p)}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 7v5l3.5 2" />
+  </svg>
+);
+
 export const TruckIcon = (p: P) => (
   <svg {...base(p)}>
     <path d="M3 6h11v9H3z" />

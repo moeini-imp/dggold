@@ -9,7 +9,7 @@ export function LandingProductSection({
   component: LandingComponent;
 }) {
   if (!component.products.length) return null;
-  const moreHref = component.url || "/shop";
+  const moreHref = component.url || `/landing/${component.id}`;
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-4 md:px-6">

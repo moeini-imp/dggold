@@ -30,6 +30,37 @@ export async function getShopCategories(): Promise<ShopCategory[] | null> {
   }));
 }
 
+/** A category node in the real parent→children tree (Category/Tree). */
+export interface CategoryTreeNode {
+  id: number;
+  name: string;
+  imageUrl: string;
+  children: CategoryTreeNode[];
+}
+
+function normTreeNode(c: Raw): CategoryTreeNode {
+  return {
+    id: num(c.id),
+    name: String(c.name ?? ""),
+    imageUrl: String(c.imageUrl ?? ""),
+    children: Array.isArray(c.children)
+      ? (c.children as Raw[]).map(normTreeNode)
+      : [],
+  };
+}
+
+/**
+ * Full category tree for the دسته‌بندی‌ها page (Category/Tree — public).
+ * Returns null on failure so callers can fall back to mock data.
+ */
+export async function getCategoryTree(): Promise<CategoryTreeNode[] | null> {
+  const json = (await shopGetJson("/Category/Tree")) as {
+    data?: unknown;
+  } | null;
+  if (!Array.isArray(json?.data)) return null;
+  return (json.data as Raw[]).map(normTreeNode);
+}
+
 export function normListProduct(p: Raw): LandingProduct {
   const discount = (p.discount ?? {}) as Raw;
   const percent = num(discount.percent);
@@ -85,6 +116,36 @@ export function buildMockCategories(): ShopCategory[] {
     { id: 16, parentId: 3, name: "مصنوعات نقره", imageUrl: "" },
   ];
   return [...parents, ...children];
+}
+
+/** Mock fallback for the /categories tree page — mirrors Category/Tree's shape. */
+export function buildMockCategoryTree(): CategoryTreeNode[] {
+  return [
+    { id: 11, name: "سکه بهار آزادی", imageUrl: "", children: [] },
+    {
+      id: 1,
+      name: "مصنوعات طلا",
+      imageUrl: "",
+      children: [
+        { id: 6, name: "دستبند", imageUrl: "", children: [] },
+        { id: 7, name: "النگو", imageUrl: "", children: [] },
+        { id: 8, name: "گردنبند", imageUrl: "", children: [] },
+        { id: 9, name: "بچگانه", imageUrl: "", children: [] },
+        { id: 10, name: "اسپورت", imageUrl: "", children: [] },
+      ],
+    },
+    { id: 12, name: "سکه پارسیان", imageUrl: "", children: [] },
+    { id: 14, name: "طلای آبشده", imageUrl: "", children: [] },
+    {
+      id: 3,
+      name: "نقره",
+      imageUrl: "",
+      children: [
+        { id: 15, name: "شمش نقره", imageUrl: "", children: [] },
+        { id: 16, name: "مصنوعات نقره", imageUrl: "", children: [] },
+      ],
+    },
+  ];
 }
 
 export function buildMockCategoryProducts(): LandingProduct[] {

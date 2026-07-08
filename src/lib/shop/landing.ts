@@ -98,6 +98,21 @@ export async function getLandingComponents(
 }
 
 /**
+ * Full product list behind a single landing component's "مشاهده بیشتر"
+ * button (LandingPage/GetComponentProducts?Id=). Returns null on failure.
+ */
+export async function getComponentProducts(
+  componentId: number,
+): Promise<LandingComponent | null> {
+  const json = (await shopGetJson(
+    `/LandingPage/GetComponentProducts?Id=${componentId}`,
+  )) as { data?: { list?: unknown } } | null;
+  const list = json?.data?.list;
+  if (!Array.isArray(list) || list.length === 0) return null;
+  return normComponent(list[0] as Raw);
+}
+
+/**
  * Fallback content (same shape as the API) so the homepage still renders when
  * the backend is unreachable. Built from the local mock catalog.
  */
@@ -154,7 +169,7 @@ export function buildMockLanding(): LandingComponent[] {
       url: null,
       products: [],
       images: [
-        { imageUrl: "placeholder:banner-1", link: "/shop" },
+        { imageUrl: "placeholder:banner-1", link: "/categories" },
         { imageUrl: "placeholder:banner-2", link: "/categories" },
       ],
     },
@@ -172,4 +187,15 @@ export function buildMockLanding(): LandingComponent[] {
       "noghre-plak-999",
     ]),
   ];
+}
+
+/** Mock fallback for a single component's product list, matched by id. */
+export function buildMockComponentProducts(
+  componentId: number,
+): LandingComponent | null {
+  return (
+    buildMockLanding().find(
+      (c) => c.type === "Product" && c.id === componentId,
+    ) ?? null
+  );
 }

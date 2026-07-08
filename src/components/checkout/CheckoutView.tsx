@@ -8,6 +8,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { CheckoutSteps } from "@/components/checkout/CheckoutSteps";
 import { AddressSelectModal } from "@/components/checkout/AddressSelectModal";
 import { PaymentGatewayIcon } from "@/components/checkout/PaymentGatewayIcon";
+import { GatewayRedirect } from "@/components/checkout/GatewayRedirect";
 import { SearchSelect } from "@/components/ui/SearchSelect";
 import { TruckIcon } from "@/components/ui/icons";
 import type { PaymentGateway } from "@/lib/shop/payment";
@@ -21,7 +22,7 @@ import {
   type Address,
 } from "@/lib/shop/address";
 import { formatToman, toEnglishDigits, toPersianDigits } from "@/lib/format";
-import { addOrder } from "@/lib/shop/order";
+import { addOrder, type AddOrderData } from "@/lib/shop/order";
 import type { CartDisplayLine } from "@/lib/types";
 
 export function CheckoutView({
@@ -59,6 +60,9 @@ export function CheckoutView({
   }
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState("");
+  const [gatewayRedirect, setGatewayRedirect] = useState<AddOrderData | null>(
+    null,
+  );
 
   // province / city
   const [provinces, setProvinces] = useState<Place[]>([]);
@@ -218,10 +222,11 @@ export function CheckoutView({
         })),
       });
 
-      const gatewayUrl = result?.data?.gatewayUrl;
-      if (result?.success && gatewayUrl) {
+      if (result?.success && result.data?.redirectUrl) {
         clear();
-        window.location.href = gatewayUrl; // hand off to the payment gateway
+        // Show the transitional hand-off view — it performs the actual
+        // navigation/form-submit (GET vs POST depends on the gateway).
+        setGatewayRedirect(result.data);
         return;
       }
       setError(
@@ -234,6 +239,10 @@ export function CheckoutView({
       setError("خطا در ثبت سفارش. دوباره تلاش کنید.");
       setPaying(false);
     }
+  }
+
+  if (gatewayRedirect) {
+    return <GatewayRedirect data={gatewayRedirect} />;
   }
 
   if (!hydrated || !authHydrated || !isAuthenticated) {
@@ -354,7 +363,7 @@ export function CheckoutView({
                     بازگشت به آدرس‌های من
                   </button>
                 ) : null}
-                <div className="grid gap-x-4 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
                   <SearchSelect
                     label="استان"
                     placeholder="جستجوی استان"
@@ -477,7 +486,7 @@ export function CheckoutView({
           {/* payment gateway */}
           <section className="rounded-card bg-surface p-5 shadow-card">
             <h2 className="mb-4 font-bold text-ink">انتخاب درگاه پرداخت</h2>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {gateways.map((g) => {
                 const selected = g.key === gateway;
                 return (
@@ -485,7 +494,7 @@ export function CheckoutView({
                     key={g.id}
                     type="button"
                     onClick={() => setGateway(g.key)}
-                    className={`flex items-center gap-3 rounded-card border p-3 text-right transition ${
+                    className={`flex min-w-0 items-center gap-3 rounded-card border p-3 text-right transition ${
                       selected
                         ? "border-teal-600 bg-teal-50"
                         : "border-line hover:border-teal-300"
