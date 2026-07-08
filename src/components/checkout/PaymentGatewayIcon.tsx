@@ -1,7 +1,7 @@
 /**
- * Generic, brand-tinted icon for a payment gateway (the backend doesn't send
- * icons). Not a brand logo — a neutral wallet glyph on a per-gateway color,
- * chosen by the gateway `key`. Unknown keys get a neutral teal.
+ * Payment gateway icon: renders the real logo when the backend provides one
+ * (`imageUrl`); otherwise falls back to a generic, brand-tinted glyph keyed
+ * by the gateway `key` (not an actual brand logo).
  */
 const palette: Record<string, string> = {
   tara: "#e8542b",
@@ -17,11 +17,30 @@ const palette: Record<string, string> = {
 
 export function PaymentGatewayIcon({
   gatewayKey,
+  imageUrl,
+  name,
   className = "",
 }: {
   gatewayKey: string;
+  imageUrl?: string;
+  name?: string;
   className?: string;
 }) {
+  if (imageUrl) {
+    return (
+      <span
+        className={`grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-lg border border-line bg-surface ${className}`}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={imageUrl}
+          alt={name ?? gatewayKey}
+          className="h-full w-full object-contain p-1"
+        />
+      </span>
+    );
+  }
+
   const color = palette[gatewayKey.toLowerCase()] ?? "#1c6b63";
   return (
     <span

@@ -8,6 +8,8 @@ export interface PaymentGateway {
   description: string;
   key: string;
   isActive: boolean;
+  /** Gateway logo, when the backend provides one. Empty when absent. */
+  imageUrl: string;
 }
 
 type Raw = Record<string, unknown>;
@@ -32,6 +34,7 @@ export async function getPaymentGateways(): Promise<PaymentGateway[] | null> {
       description: String(g.description ?? ""),
       key: String(g.key ?? ""),
       isActive: g.isActive !== false,
+      imageUrl: String(g.imageUrl ?? ""),
     }))
     .filter((g) => g.isActive)
     .sort((a, b) => a.orderIndex - b.orderIndex);
@@ -40,8 +43,8 @@ export async function getPaymentGateways(): Promise<PaymentGateway[] | null> {
 /** Fallback list (same shape) when the API is unreachable. */
 export function buildMockGateways(): PaymentGateway[] {
   return [
-    { id: 1, code: 14, orderIndex: 1, name: "درگاه پرداخت تارا", description: "پرداخت اعتباری و اقساطی تارا", key: "tara", isActive: true },
-    { id: 2, code: 2, orderIndex: 2, name: "پرداخت امن اسمارتیز", description: "پرداخت با کارت‌های عضو شتاب", key: "smartiz", isActive: true },
-    { id: 5, code: 5, orderIndex: 5, name: "درگاه هوشمند دیجی‌پی", description: "پرداخت اعتباری و اقساطی دیجی‌پی", key: "digipay", isActive: true },
+    { id: 1, code: 14, orderIndex: 1, name: "درگاه پرداخت تارا", description: "پرداخت اعتباری و اقساطی تارا", key: "tara", isActive: true, imageUrl: "" },
+    { id: 2, code: 2, orderIndex: 2, name: "پرداخت امن اسمارتیز", description: "پرداخت با کارت‌های عضو شتاب", key: "smartiz", isActive: true, imageUrl: "" },
+    { id: 5, code: 5, orderIndex: 5, name: "درگاه هوشمند دیجی‌پی", description: "پرداخت اعتباری و اقساطی دیجی‌پی", key: "digipay", isActive: true, imageUrl: "" },
   ];
 }

@@ -1,18 +1,18 @@
 import { LandingSlider } from "@/components/home/LandingSlider";
 import { LandingProductSection } from "@/components/home/LandingProductSection";
 import { HomeCategories } from "@/components/home/HomeCategories";
-import { HomeVendors } from "@/components/home/HomeVendors";
+import { HomePaymentGateways } from "@/components/home/HomePaymentGateways";
 import { getLandingComponents, buildMockLanding } from "@/lib/shop/landing";
 import { getShopCategories, buildMockCategories } from "@/lib/shop/category";
-import { getVendors, buildMockVendors } from "@/lib/shop/vendor";
+import { getPaymentGateways, buildMockGateways } from "@/lib/shop/payment";
 
 export default async function Home() {
   // Homepage is composed of backend-defined components; fall back to mock
   // content (same shape) when the API is unreachable.
-  const [components, categories, vendors] = await Promise.all([
+  const [components, categories, gateways] = await Promise.all([
     getLandingComponents("shop").then((c) => c ?? buildMockLanding()),
     getShopCategories().then((c) => c ?? buildMockCategories()),
-    getVendors().then((v) => v ?? buildMockVendors()),
+    getPaymentGateways().then((g) => g ?? buildMockGateways()),
   ]);
 
   const sliders = components.filter((c) => c.type === "Slider");
@@ -25,7 +25,7 @@ export default async function Home() {
       ))}
 
       <HomeCategories categories={categories} />
-      <HomeVendors vendors={vendors} />
+      <HomePaymentGateways gateways={gateways} />
 
       {sections.map((c, i) => (
         <LandingProductSection key={`${c.id}-${i}`} component={c} />

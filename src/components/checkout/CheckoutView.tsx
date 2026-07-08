@@ -500,7 +500,11 @@ export function CheckoutView({
                         : "border-line hover:border-teal-300"
                     }`}
                   >
-                    <PaymentGatewayIcon gatewayKey={g.key} />
+                    <PaymentGatewayIcon
+                      gatewayKey={g.key}
+                      imageUrl={g.imageUrl}
+                      name={g.name}
+                    />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-medium text-ink">
                         {g.name}

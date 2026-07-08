@@ -17,7 +17,7 @@ export function HomeCategories({ categories }: { categories: ShopCategory[] }) {
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-6 md:px-8">
-      <HScroller className="pb-1">
+      <HScroller className="pb-1" centerWhenFits>
         {categories.map((c) => (
           <Link
             key={c.id}
