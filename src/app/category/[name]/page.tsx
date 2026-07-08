@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LandingProductCard } from "@/components/home/LandingProductCard";
+import { Pagination } from "@/components/ui/Pagination";
 import {
   getCategoryProducts,
+  getProductsByCategoryId,
   buildMockCategoryProducts,
 } from "@/lib/shop/category";
 import { toPersianDigits } from "@/lib/format";
+import type { LandingProduct } from "@/lib/shop/landing";
 
 export async function generateMetadata({
   params,
@@ -21,21 +24,35 @@ export default async function CategoryPage({
   searchParams,
 }: {
   params: Promise<{ name: string }>;
-  searchParams: Promise<{ cid?: string }>;
+  searchParams: Promise<{ cid?: string; page?: string }>;
 }) {
   const { name } = await params;
-  const { cid } = await searchParams;
+  const { cid, page } = await searchParams;
   const categoryName = decodeURIComponent(name);
-  const fetched =
-    (await getCategoryProducts(categoryName)) ?? buildMockCategoryProducts();
-
-  // The API can return the whole parent group; keep only the clicked category.
   const categoryId = cid ? Number(cid) : null;
-  const hasCategoryIds = fetched.some((p) => p.categoryId != null);
-  const products =
-    categoryId && hasCategoryIds
-      ? fetched.filter((p) => p.categoryId === categoryId)
-      : fetched;
+  const pageIndex = Math.max(1, Number(page) || 1);
+
+  let products: LandingProduct[];
+  let pageCounts = 1;
+
+  if (categoryId) {
+    // CategoryId includes items from child categories (a parent like "طلا"
+    // shows everything underneath it), unlike a name match.
+    const result = await getProductsByCategoryId(categoryId, { pageIndex });
+    if (result) {
+      products = result.items;
+      pageCounts = result.pageCounts;
+    } else {
+      products = buildMockCategoryProducts();
+    }
+  } else {
+    // No id in the URL (rare) — fall back to matching by name, no pagination.
+    products =
+      (await getCategoryProducts(categoryName)) ?? buildMockCategoryProducts();
+  }
+
+  const makeHref = (p: number) =>
+    `/category/${encodeURIComponent(categoryName)}?cid=${categoryId ?? ""}&page=${p}`;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 md:px-6 md:py-8">
@@ -61,11 +78,21 @@ export default async function CategoryPage({
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {products.map((p) => (
-            <LandingProductCard key={p.id} product={p} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            {products.map((p) => (
+              <LandingProductCard key={p.id} product={p} />
+            ))}
+          </div>
+
+          {categoryId ? (
+            <Pagination
+              currentPage={pageIndex}
+              totalPages={pageCounts}
+              makeHref={makeHref}
+            />
+          ) : null}
+        </>
       )}
     </div>
   );

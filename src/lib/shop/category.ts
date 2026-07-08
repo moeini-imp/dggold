@@ -81,7 +81,7 @@ export function normListProduct(p: Raw): LandingProduct {
   };
 }
 
-/** Products in a category (public). Returns null on failure. */
+/** Products in a category, matched by exact name (public). Returns null on failure. */
 export async function getCategoryProducts(
   categoryName: string,
 ): Promise<LandingProduct[] | null> {
@@ -91,6 +91,41 @@ export async function getCategoryProducts(
   const list = json?.data?.list;
   if (!Array.isArray(list)) return null;
   return (list as Raw[]).map(normListProduct);
+}
+
+export interface CategoryProductPage {
+  items: LandingProduct[];
+  pageIndex: number;
+  pageSize: number;
+  pageCounts: number;
+}
+
+const DEFAULT_CATEGORY_PAGE_SIZE = 24;
+
+/**
+ * Products under a category id — the backend includes items from child
+ * categories too (so a parent like "طلا" returns everything underneath it,
+ * not just items tagged with that exact id). Paginated. Public, no auth
+ * needed. Returns null on failure so callers can fall back to mock data.
+ */
+export async function getProductsByCategoryId(
+  categoryId: number,
+  opts: { pageIndex?: number; pageSize?: number } = {},
+): Promise<CategoryProductPage | null> {
+  const pageIndex = Math.max(1, opts.pageIndex ?? 1);
+  const pageSize = opts.pageSize ?? DEFAULT_CATEGORY_PAGE_SIZE;
+  const json = (await shopGetJson(
+    `/Product/List?CategoryId=${categoryId}&PageIndex=${pageIndex}&PageSize=${pageSize}`,
+  )) as { data?: { list?: unknown; argument?: Raw } } | null;
+  const list = json?.data?.list;
+  if (!Array.isArray(list)) return null;
+  const arg = json?.data?.argument ?? {};
+  return {
+    items: (list as Raw[]).map(normListProduct),
+    pageIndex: num(arg.pageIndex) || pageIndex,
+    pageSize: num(arg.pageSize) || pageSize,
+    pageCounts: Math.max(1, num(arg.pageCounts) || 1),
+  };
 }
 
 /* ---- mock fallbacks (when the API is unreachable) ---- */
