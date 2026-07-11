@@ -29,7 +29,7 @@ export function LandingProductCard({ product }: { product: LandingProduct }) {
         </h3>
         {product.weight > 0 ? (
           <span className="mt-1.5 inline-flex w-fit items-center rounded-full bg-gold-100 px-2 py-0.5 text-[11px] font-medium text-gold-600">
-            وزن {toPersianDigits(product.weight)} گرم
+            {toPersianDigits(product.weight)} گرم
           </span>
         ) : null}
       </Link>
