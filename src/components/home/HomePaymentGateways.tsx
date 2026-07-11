@@ -21,7 +21,7 @@ export function HomePaymentGateways({
           <span
             key={g.id}
             title={g.name}
-            className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-2xl border border-line bg-surface shadow-sm"
+            className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-2xl border border-line bg-surface shadow-sm"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img

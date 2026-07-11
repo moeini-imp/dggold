@@ -7,6 +7,10 @@ import { ChevronLeft, ChevronRight } from "@/components/ui/icons";
  * Single-row horizontal scroller. Native touch swipe on mobile; left/right
  * arrow buttons on desktop scroll by ~80% of the visible width.
  *
+ * By default lays children out with `flex`; pass grid-based classes (see
+ * `GRID_FILL_UP_TO_8`) via `className` to instead have items evenly fill the
+ * row up to a max count, scrolling once there are more than that.
+ *
  * `centerWhenFits`: when the content is narrower than the container, center
  * it instead of leaving it start-aligned. Only applied once measured to fit —
  * `justify-center` on an overflowing scroll container hides the start of the
@@ -23,6 +27,7 @@ export function HScroller({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [fits, setFits] = useState(false);
+  const isGrid = className.includes("grid");
 
   useEffect(() => {
     if (!centerWhenFits) return;
@@ -54,7 +59,9 @@ export function HScroller({
 
       <div
         ref={ref}
-        className={`no-scrollbar flex gap-4 overflow-x-auto scroll-smooth ${fits ? "justify-center" : ""} ${className}`}
+        className={`no-scrollbar gap-4 overflow-x-auto scroll-smooth ${
+          isGrid ? "" : "flex"
+        } ${fits ? "justify-center" : ""} ${className}`}
       >
         {children}
       </div>

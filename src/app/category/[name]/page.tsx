@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LandingProductCard } from "@/components/home/LandingProductCard";
+import { CategorySubcategories } from "@/components/category/CategorySubcategories";
 import { Pagination } from "@/components/ui/Pagination";
 import {
   getCategoryProducts,
   getProductsByCategoryId,
+  getCategoryTree,
+  findCategoryNode,
   buildMockCategoryProducts,
+  buildMockCategoryTree,
 } from "@/lib/shop/category";
 import { toPersianDigits } from "@/lib/format";
 import type { LandingProduct } from "@/lib/shop/landing";
@@ -32,13 +36,23 @@ export default async function CategoryPage({
   const categoryId = cid ? Number(cid) : null;
   const pageIndex = Math.max(1, Number(page) || 1);
 
+  const [productsOutcome, treeResult] = await Promise.all([
+    categoryId
+      ? // CategoryId includes items from child categories (a parent like
+        // "طلا" shows everything underneath it), unlike a name match.
+        getProductsByCategoryId(categoryId, { pageIndex })
+      : // No id in the URL (rare) — fall back to matching by name, no pagination.
+        getCategoryProducts(categoryName),
+    getCategoryTree(),
+  ]);
+
   let products: LandingProduct[];
   let pageCounts = 1;
 
   if (categoryId) {
-    // CategoryId includes items from child categories (a parent like "طلا"
-    // shows everything underneath it), unlike a name match.
-    const result = await getProductsByCategoryId(categoryId, { pageIndex });
+    const result = productsOutcome as Awaited<
+      ReturnType<typeof getProductsByCategoryId>
+    >;
     if (result) {
       products = result.items;
       pageCounts = result.pageCounts;
@@ -46,10 +60,12 @@ export default async function CategoryPage({
       products = buildMockCategoryProducts();
     }
   } else {
-    // No id in the URL (rare) — fall back to matching by name, no pagination.
-    products =
-      (await getCategoryProducts(categoryName)) ?? buildMockCategoryProducts();
+    products = (productsOutcome as LandingProduct[] | null) ?? buildMockCategoryProducts();
   }
+
+  const tree = treeResult ?? buildMockCategoryTree();
+  const node = categoryId ? findCategoryNode(tree, categoryId) : null;
+  const subcategories = node?.children ?? [];
 
   const makeHref = (p: number) =>
     `/category/${encodeURIComponent(categoryName)}?cid=${categoryId ?? ""}&page=${p}`;
@@ -64,6 +80,12 @@ export default async function CategoryPage({
           {toPersianDigits(products.length)} محصول
         </span>
       </div>
+
+      <CategorySubcategories
+        items={subcategories}
+        currentName={categoryName}
+        currentId={categoryId}
+      />
 
       {products.length === 0 ? (
         <div className="flex flex-col items-center gap-4 py-20 text-center">

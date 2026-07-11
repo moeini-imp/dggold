@@ -49,6 +49,19 @@ function normTreeNode(c: Raw): CategoryTreeNode {
   };
 }
 
+/** Finds a node anywhere in the tree by id (depth-first). */
+export function findCategoryNode(
+  tree: CategoryTreeNode[],
+  id: number,
+): CategoryTreeNode | null {
+  for (const node of tree) {
+    if (node.id === id) return node;
+    const found = findCategoryNode(node.children, id);
+    if (found) return found;
+  }
+  return null;
+}
+
 /**
  * Full category tree for the دسته‌بندی‌ها page (Category/Tree — public).
  * Returns null on failure so callers can fall back to mock data.

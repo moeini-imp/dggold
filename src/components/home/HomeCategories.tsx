@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { HScroller } from "@/components/ui/HScroller";
+import { GRID_FILL_UP_TO_8 } from "@/components/ui/gridFill";
 import type { ShopCategory } from "@/lib/shop/category";
 
 function FallbackIcon() {
@@ -17,26 +18,26 @@ export function HomeCategories({ categories }: { categories: ShopCategory[] }) {
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-6 md:px-8">
-      <HScroller className="pb-1" centerWhenFits>
+      <HScroller className={`${GRID_FILL_UP_TO_8} pb-1`} centerWhenFits>
         {categories.map((c) => (
           <Link
             key={c.id}
             href={`/category/${encodeURIComponent(c.name)}?cid=${c.id}`}
-            className="flex shrink-0 flex-col items-center gap-2 text-center"
+            className="flex flex-col items-center gap-2 text-center"
           >
-            <span className="grid h-20 w-20 place-items-center overflow-hidden rounded-2xl border border-gold-200 bg-surface shadow-sm">
+            <span className="grid aspect-square w-full place-items-center overflow-hidden rounded-2xl border border-gold-200 bg-surface shadow-sm">
               {c.imageUrl && !c.imageUrl.startsWith("placeholder:") ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={c.imageUrl}
                   alt={c.name}
-                  className="h-full w-full object-contain p-2"
+                  className="h-full w-full object-cover"
                 />
               ) : (
                 <FallbackIcon />
               )}
             </span>
-            <span className="w-20 text-xs font-medium leading-tight text-ink">
+            <span className="w-full truncate text-xs font-medium leading-tight text-ink">
               {c.name}
             </span>
           </Link>
