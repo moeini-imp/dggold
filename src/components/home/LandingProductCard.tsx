@@ -27,26 +27,28 @@ export function LandingProductCard({ product }: { product: LandingProduct }) {
         <h3 className="mt-3 line-clamp-2 min-h-[2.8em] text-sm font-medium leading-relaxed text-ink">
           {product.name}
         </h3>
-        {product.info ? (
-          <p className="mt-0.5 text-xs text-muted">{product.info}</p>
+        {product.weight > 0 ? (
+          <span className="mt-1.5 inline-flex w-fit items-center rounded-full bg-gold-100 px-2 py-0.5 text-[11px] font-medium text-gold-600">
+            وزن {toPersianDigits(product.weight)} گرم
+          </span>
         ) : null}
       </Link>
 
       <div className="mt-auto flex items-end justify-between gap-2 pt-3">
         <Link href={href} className="min-w-0 flex-1" aria-label={product.name}>
           {hasDiscount ? (
-            <p className="truncate text-xs text-muted line-through tnum">
+            <p className="truncate text-xs text-muted line-through">
               {formatToman(product.totalPrice, false)}
             </p>
           ) : null}
-          <p className="text-sm font-bold text-teal-700 tnum md:text-base">
+          <p className="text-base font-normal text-teal-700">
             {formatToman(product.finalPrice)}
           </p>
         </Link>
         <Link
           href={href}
           aria-label="مشاهده محصول"
-          className="grid h-10 w-10 shrink-0 place-items-center rounded-btn bg-teal-600 text-surface transition hover:bg-teal-700"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-teal-600 text-surface transition hover:bg-teal-700"
         >
           <CartIcon className="h-5 w-5" />
         </Link>
