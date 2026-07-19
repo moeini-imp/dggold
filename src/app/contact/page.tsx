@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ClockIcon, PhoneIcon, PinIcon } from "@/components/ui/icons";
 import { toPersianDigits } from "@/lib/format";
+import { SITE_ADDRESS, SITE_HOURS, SITE_PHONE, SITE_PHONE_DISPLAY } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "تماس با ما | دیجی گلد",
@@ -11,10 +12,9 @@ const LAT = 35.678472;
 const LNG = 51.415722;
 const MAP_QUERY = `${LAT},${LNG}`;
 
-const PHONE = "02155156658";
-const ADDRESS =
-  "تهران، چهارراه گلوبندک، ابتدای خیابان پانزده خرداد غربی، پلاک ۶۵۳، واحد ۲";
-const HOURS = "۹:۰۰ الی ۱۷:۰۰";
+const PHONE = SITE_PHONE;
+const ADDRESS = SITE_ADDRESS;
+const HOURS = SITE_HOURS;
 
 const INTRO =
   "ما متعهد هستیم بهترین خدمات را با بالاترین کیفیت به شما ارائه دهیم و همواره آماده‌ایم تا به سوالات، نیازها و نظرات شما با دقت و احترام پاسخ دهیم. اگر به راهنمایی یا اطلاعات بیشتری نیاز دارید، تیم پشتیبانی ما همواره در کنار شماست. تیم ما با افتخار در کوتاه‌ترین زمان ممکن به پیام‌ها و تماس‌های شما پاسخ می‌دهد تا اطمینان حاصل شود که تجربه‌ای رضایت‌بخش و حرفه‌ای از ارتباط با ما داشته باشید.";
@@ -67,7 +67,7 @@ export default function ContactPage() {
         <InfoRow
           icon={<PhoneIcon className="h-5 w-5" />}
           label="تماس تلفنی"
-          value={toPersianDigits("021-55156658")}
+          value={toPersianDigits(SITE_PHONE_DISPLAY)}
           href={`tel:${PHONE}`}
         />
         <InfoRow

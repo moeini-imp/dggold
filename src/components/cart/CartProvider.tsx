@@ -101,6 +101,10 @@ interface CartContextValue {
   setQty: (productId: string, vendorId: string, quantity: number) => void;
   remove: (productId: string, vendorId: string) => void;
   clear: () => void;
+  /** Shared cart modal (opened automatically on add, or from the header icon). */
+  modalOpen: boolean;
+  openModal: () => void;
+  closeModal: () => void;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -108,6 +112,7 @@ const CartContext = createContext<CartContextValue | null>(null);
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [lines, dispatch] = useReducer(reducer, []);
   const [hydrated, setHydrated] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
 
   // hydrate once on mount
   useEffect(() => {
@@ -148,8 +153,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       remove: (productId, vendorId) =>
         dispatch({ type: "remove", productId, vendorId }),
       clear: () => dispatch({ type: "clear" }),
+      modalOpen,
+      openModal: () => setModalOpen(true),
+      closeModal: () => setModalOpen(false),
     }),
-    [lines, hydrated, getQuantity],
+    [lines, hydrated, getQuantity, modalOpen],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

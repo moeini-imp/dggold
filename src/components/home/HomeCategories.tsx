@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { HScroller } from "@/components/ui/HScroller";
-import { GRID_FILL_UP_TO_8 } from "@/components/ui/gridFill";
-import type { ShopCategory } from "@/lib/shop/category";
+import type { CategoryTreeNode } from "@/lib/shop/category";
 
 function FallbackIcon() {
   return (
@@ -12,20 +11,22 @@ function FallbackIcon() {
   );
 }
 
-/** Homepage category strip — a single row; scroll/arrows when it overflows. */
-export function HomeCategories({ categories }: { categories: ShopCategory[] }) {
-  if (!categories.length) return null;
+/** Homepage category icon row — the real category tree's top-level (root)
+ *  nodes, 92×92 tiles; centered when they fit, scrolls once there are more. */
+export function HomeCategories({ categories }: { categories: CategoryTreeNode[] }) {
+  const topLevel = categories;
+  if (!topLevel.length) return null;
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-6 md:px-8">
-      <HScroller className={`${GRID_FILL_UP_TO_8} pb-1`} centerWhenFits>
-        {categories.map((c) => (
+    <section className="mx-auto max-w-7xl px-4 py-7 md:px-8">
+      <HScroller className="pb-1" centerWhenFits>
+        {topLevel.map((c) => (
           <Link
             key={c.id}
             href={`/category/${encodeURIComponent(c.name)}?cid=${c.id}`}
-            className="flex flex-col items-center gap-2 text-center"
+            className="flex w-[104px] shrink-0 flex-col items-center gap-3 text-center"
           >
-            <span className="grid aspect-square w-full place-items-center overflow-hidden rounded-2xl border border-gold-200 bg-surface shadow-sm">
+            <span className="grid h-[92px] w-[92px] place-items-center overflow-hidden rounded-[20px] border border-line bg-surface shadow-card">
               {c.imageUrl && !c.imageUrl.startsWith("placeholder:") ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -37,7 +38,7 @@ export function HomeCategories({ categories }: { categories: ShopCategory[] }) {
                 <FallbackIcon />
               )}
             </span>
-            <span className="w-full truncate text-xs font-medium leading-tight text-ink">
+            <span className="w-full truncate text-[13px] font-semibold text-ink">
               {c.name}
             </span>
           </Link>

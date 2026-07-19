@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { LandingProductCard } from "@/components/home/LandingProductCard";
-import { ChevronLeft } from "@/components/ui/icons";
 import type { LandingComponent } from "@/lib/shop/landing";
 
+/** A backend-composed homepage product section — name/order/content stay
+ *  fully backend-controlled; only the visual treatment is restyled. */
 export function LandingProductSection({
   component,
 }: {
@@ -12,31 +13,22 @@ export function LandingProductSection({
   const moreHref = component.url || `/landing/${component.id}`;
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-4 md:px-6">
-      <div className="flex items-center justify-between rounded-card bg-teal-700 px-4 py-3 text-surface md:px-6">
-        <h2 className="flex items-center gap-2 text-lg font-extrabold md:text-xl">
+    <section className="mx-auto max-w-7xl px-4 py-8 md:px-8">
+      <div className="mb-6 flex items-baseline justify-between">
+        <h2 className="flex items-center gap-2 text-[22px] font-extrabold text-ink">
           {component.name}
           {component.badge ? <span>{component.badge}</span> : null}
         </h2>
         {component.hasMore ? (
-          <Link
-            href={moreHref}
-            className="flex items-center gap-1 rounded-btn bg-teal-800/60 px-3 py-1.5 text-sm font-medium transition hover:bg-teal-800"
-          >
-            {component.buttonText || "مشاهده بیشتر"}
-            <ChevronLeft className="h-4 w-4" />
+          <Link href={moreHref} className="text-sm font-semibold text-teal-700">
+            {component.buttonText || "مشاهده همه"} ‹
           </Link>
         ) : null}
       </div>
 
-      <div className="no-scrollbar mt-4 flex snap-x gap-4 overflow-x-auto pb-2">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 md:gap-5">
         {component.products.map((p) => (
-          <div
-            key={p.id}
-            className="w-[44%] shrink-0 snap-start sm:w-[260px] md:w-[240px]"
-          >
-            <LandingProductCard product={p} />
-          </div>
+          <LandingProductCard key={p.id} product={p} />
         ))}
       </div>
     </section>

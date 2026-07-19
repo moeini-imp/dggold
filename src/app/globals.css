@@ -7,49 +7,50 @@
 */
 
 @theme {
-  /* Brand: teal scale */
+  /* Brand: teal scale (Zarrin Gallery handoff palette) */
   --color-teal-50: #eef6f5;
   --color-teal-100: #d6e9e6;
   --color-teal-200: #aed3cd;
   --color-teal-300: #7eb6ae;
   --color-teal-400: #4f9890;
-  --color-teal-500: #2c7d74;
-  --color-teal-600: #1c6b63; /* primary */
-  --color-teal-700: #155650;
-  --color-teal-800: #114e49;
-  --color-teal-900: #0d3a36;
+  --color-teal-500: #026f66;
+  --color-teal-600: #004d4d; /* primary */
+  --color-teal-700: #00706b; /* hover */
+  --color-teal-800: #015c56;
+  --color-teal-900: #013535;
+  --color-teal-950: #001f1f;
 
   /* Accent: gold scale */
   --color-gold-50: #fcf7e8;
-  --color-gold-100: #f7ecc6;
-  --color-gold-200: #efd98c;
-  --color-gold-300: #e8c66b;
+  --color-gold-100: #fbf3e1;
+  --color-gold-200: #f0c75e;
+  --color-gold-300: #e8c468;
   --color-gold-400: #d8b052;
-  --color-gold-500: #c9a24b;
-  --color-gold-600: #a8842f;
+  --color-gold-500: #c9962c;
+  --color-gold-600: #8a6116;
 
   /* Neutrals */
-  --color-ink: #2a2a2a;
-  --color-muted: #8a9096;
-  --color-line: #ececef;
+  --color-ink: #16302e;
+  --color-muted: #6e7c7c;
+  --color-line: #ece9e2;
   --color-surface: #ffffff;
-  --color-canvas: #f4f5f6;
+  --color-canvas: #f7f6f2;
 
   /* Semantic */
   --color-primary: var(--color-teal-600);
   --color-primary-hover: var(--color-teal-700);
   --color-accent: var(--color-gold-500);
-  --color-danger: #e0524d;
-  --color-success: #3fae6a;
+  --color-danger: #d0483f;
+  --color-success: #1f9d6b;
 
   /* Radii */
-  --radius-card: 16px;
+  --radius-card: 18px;
   --radius-btn: 12px;
   --radius-hero: 24px;
 
   /* Shadows */
-  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.06);
-  --shadow-pop: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --shadow-card: 0 8px 20px rgba(22, 48, 46, 0.06);
+  --shadow-pop: 0 24px 60px rgba(22, 48, 46, 0.18);
 
   /* Fonts (wired in layout.tsx via next/font) */
   --font-sans: var(--font-vazir), system-ui, sans-serif;
@@ -82,6 +83,10 @@ body {
   /* Persian text reads better with a touch more leading */
   line-height: 1.7;
   -webkit-font-smoothing: antialiased;
+  /* Faint branching gold-vein marbling — barely visible, not decorative */
+  background-image: url("/gold-veins.png");
+  background-size: 820px 820px;
+  background-repeat: repeat;
 }
 
 /* Tabular numerals for prices so digits align */

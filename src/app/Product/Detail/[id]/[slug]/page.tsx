@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { ProductDetailReal } from "@/components/product/ProductDetailReal";
-import { getProductDetail, buildMockProductDetail } from "@/lib/shop/product";
+import {
+  getProductDetail,
+  buildMockProductDetail,
+  getRelatedProducts,
+} from "@/lib/shop/product";
 
 export async function generateMetadata({
   params,
@@ -21,5 +25,6 @@ export default async function ProductDetailPage({
   const { id, slug } = await params;
   const detail =
     (await getProductDetail(id, slug)) ?? buildMockProductDetail(id, slug);
-  return <ProductDetailReal detail={detail} />;
+  const related = detail.id ? await getRelatedProducts(detail.id) : [];
+  return <ProductDetailReal detail={detail} related={related} />;
 }

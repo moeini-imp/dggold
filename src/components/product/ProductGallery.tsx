@@ -16,23 +16,25 @@ export function ProductGallery({
   const current = list[active] ?? list[0];
 
   return (
-    <div>
-      <ProductImage
-        src={current}
-        alt={alt}
-        className="aspect-square w-full rounded-card bg-surface shadow-card"
-      />
+    <div className="flex flex-col gap-3">
+      <div className="grid h-[280px] place-items-center rounded-[20px] border border-line bg-surface p-9 md:h-[340px]">
+        <ProductImage
+          src={current}
+          alt={alt}
+          className="h-full w-full rounded-[14px]"
+        />
+      </div>
 
       {list.length > 1 ? (
-        <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto">
-          {list.map((img, i) => (
+        <div className="grid grid-cols-4 gap-2.5">
+          {list.slice(0, 4).map((img, i) => (
             <button
               key={i}
               type="button"
               onClick={() => setActive(i)}
               aria-label={`تصویر ${i + 1}`}
               aria-current={i === active}
-              className={`shrink-0 overflow-hidden rounded-xl border-2 transition ${
+              className={`h-16 overflow-hidden rounded-xl border-2 p-1.5 transition ${
                 i === active
                   ? "border-teal-600"
                   : "border-line hover:border-teal-300"
@@ -41,7 +43,7 @@ export function ProductGallery({
               <ProductImage
                 src={img}
                 alt={`${alt} ${i + 1}`}
-                className="h-16 w-16 bg-surface"
+                className="h-full w-full rounded-lg bg-surface"
               />
             </button>
           ))}

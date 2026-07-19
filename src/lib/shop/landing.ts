@@ -11,6 +11,12 @@ export interface LandingProduct {
   id: number;
   slug?: string; // for linking in the mock fallback (real API links by id)
   categoryId?: number;
+  /** Only present where the raw API includes a vendor (category/related product
+   *  lists) — absent on the homepage's slimmer landing-component product shape,
+   *  which is why those cards can't add-to-cart directly (no vendor to key the
+   *  cart line on) and instead link through to the product page. */
+  vendorId?: number;
+  vendorName?: string;
   imageUrl: string;
   name: string;
   info: string;

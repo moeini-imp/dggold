@@ -74,16 +74,25 @@ export async function getCategoryTree(): Promise<CategoryTreeNode[] | null> {
   return (json.data as Raw[]).map(normTreeNode);
 }
 
+/**
+ * Maps the richer product shape returned by `Product/List` and
+ * `Product/RelatedProducts` — unlike the homepage's landing-component
+ * products, these include `vendor` and `slug`, so cards built from this can
+ * add-to-cart directly instead of only linking through to the product page.
+ */
 export function normListProduct(p: Raw): LandingProduct {
   const discount = (p.discount ?? {}) as Raw;
   const percent = num(discount.percent);
   const raw = num(discount.rawValue);
   const total = num(p.totalPrice);
   const imagesUrl = Array.isArray(p.imagesUrl) ? (p.imagesUrl as unknown[]) : [];
+  const vendor = p.vendor as Raw | null;
   return {
     id: num(p.id),
     slug: p.slug ? String(p.slug) : undefined,
     categoryId: num(p.categoryId),
+    vendorId: vendor?.id != null ? num(vendor.id) : undefined,
+    vendorName: vendor?.name ? String(vendor.name) : undefined,
     imageUrl: String(imagesUrl[0] ?? ""),
     name: String(p.name ?? ""),
     info: String(p.info ?? ""),

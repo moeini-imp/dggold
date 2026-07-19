@@ -1,5 +1,5 @@
 import { shopGetJson } from "@/lib/shop/http";
-import { buildMockCategoryProducts } from "@/lib/shop/category";
+import { buildMockCategoryProducts, normListProduct } from "@/lib/shop/category";
 import type { LandingProduct } from "@/lib/shop/landing";
 
 export interface Money {
@@ -101,6 +101,31 @@ export async function getProductDetail(
   )) as { data?: unknown } | null;
   if (!json?.data || typeof json.data !== "object") return null;
   return normDetail(json.data as Raw);
+}
+
+/**
+ * Related products for a PDP, via the real, previously-unwired
+ * `Product/RelatedProducts` endpoint — takes the product's own `Id` (not a
+ * category filter; confirmed live — `CategoryId` alone returns an empty list,
+ * `Id=<productId>` returns the backend's actual related set). Used both for
+ * the "سایر وزن‌های این محصول" chip row and the "محصولات مرتبط" grid (each
+ * weight is a fully separate product in this backend, so this is the closest
+ * real substitute for a variant list). Returns [] on failure so sections just
+ * don't render.
+ */
+export async function getRelatedProducts(
+  productId: number,
+  limit = 8,
+): Promise<LandingProduct[]> {
+  const json = (await shopGetJson(
+    `/Product/RelatedProducts?Id=${productId}&PageIndex=1&PageSize=${limit}`,
+  )) as { data?: { list?: unknown } } | null;
+  const list = json?.data?.list;
+  if (!Array.isArray(list)) return [];
+  return (list as Raw[])
+    .map(normListProduct)
+    .filter((p) => p.id !== productId)
+    .slice(0, limit);
 }
 
 /** Mock detail so the PDP renders when the API is unreachable. */

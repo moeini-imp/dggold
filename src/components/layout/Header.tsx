@@ -1,94 +1,72 @@
 import Link from "next/link";
 import { Logo } from "@/components/ui/Logo";
-import { CartBadge } from "@/components/cart/CartBadge";
 import { HeaderBack } from "@/components/layout/HeaderBack";
-import {
-  CartIcon,
-  ChevronDown,
-  HelpIcon,
-  SearchIcon,
-  UserIcon,
-} from "@/components/ui/icons";
+import { CategoryMenu } from "@/components/layout/CategoryMenu";
+import { UserMenu } from "@/components/layout/UserMenu";
+import { HeaderCartButton } from "@/components/layout/HeaderCartButton";
+import { SearchIcon } from "@/components/ui/icons";
+import type { CategoryTreeNode } from "@/lib/shop/category";
 
-const navLinks = [
-  { href: "/categories", label: "دسته‌بندی محصولات", caret: true },
-  { href: "/contact", label: "تماس با ما" },
-];
-
-function IconButton({
-  children,
-  label,
-  href,
-  badge,
-}: {
-  children: React.ReactNode;
-  label: string;
-  href: string;
-  badge?: number;
-}) {
+function GearIcon({ className = "" }: { className?: string }) {
   return (
-    <Link
-      href={href}
-      aria-label={label}
-      className="relative grid h-10 w-10 place-items-center rounded-full text-ink/80 transition hover:bg-canvas hover:text-teal-700"
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.7}
     >
-      {children}
-      {badge ? (
-        <span className="absolute -top-0.5 -right-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-gold-400 px-1 text-[10px] font-bold text-ink tnum">
-          {badge}
-        </span>
-      ) : null}
-    </Link>
+      <circle cx="12" cy="12" r="3.2" />
+      <path d="M12 3v2.2M12 18.8V21M21 12h-2.2M5.2 12H3M18.1 5.9l-1.6 1.6M7.5 16.5l-1.6 1.6M18.1 18.1l-1.6-1.6M7.5 7.5 5.9 5.9" />
+    </svg>
   );
 }
 
-export function Header() {
+export function Header({ categories }: { categories: CategoryTreeNode[] }) {
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-surface/95 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 md:px-6">
-        {/* Right (RTL start): back button + nav links */}
-        <div className="flex items-center gap-1">
-          <HeaderBack />
-          <nav className="hidden items-center gap-6 md:flex">
-            {navLinks.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                className="flex items-center gap-1 text-sm font-medium text-ink/80 transition hover:text-teal-700"
-              >
-                {l.label}
-                {l.caret ? <ChevronDown className="h-4 w-4" /> : null}
-              </Link>
-            ))}
-          </nav>
+    <header className="sticky top-0 z-40 border-b border-line bg-surface">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 md:h-[88px] md:px-8">
+        {/* Right (RTL start): back button + category dropdown + store link */}
+        <div className="flex items-center gap-1 md:gap-8">
+          <span className="md:hidden">
+            <HeaderBack />
+          </span>
+          <span className="hidden md:block">
+            <CategoryMenu categories={categories} />
+          </span>
+          <Link
+            href="/#store"
+            className="hidden text-sm font-semibold text-ink md:block"
+          >
+            فروشگاه
+          </Link>
         </div>
 
         {/* Center: logo */}
         <Logo className="md:absolute md:left-1/2 md:-translate-x-1/2" />
 
         {/* Left (RTL end): icon cluster */}
-        <div className="flex items-center gap-1">
+        <div dir="ltr" className="flex items-center gap-2 md:gap-4.5">
+          <HeaderCartButton />
+          <span className="md:hidden">
+            <Link
+              href="/search"
+              aria-label="جستجو"
+              className="grid h-10 w-10 place-items-center rounded-full text-ink/80 transition hover:bg-canvas"
+            >
+              <SearchIcon className="h-[22px] w-[22px]" />
+            </Link>
+          </span>
+          <span className="hidden md:block">
+            <UserMenu />
+          </span>
           <Link
-            href="/cart"
-            aria-label="سبد خرید"
-            className="relative grid h-10 w-10 place-items-center rounded-full text-ink/80 transition hover:bg-canvas hover:text-teal-700"
+            href="/profile"
+            aria-label="تنظیمات"
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-[10px] border border-line bg-surface text-ink transition hover:bg-canvas"
           >
-            <CartIcon className="h-[22px] w-[22px]" />
-            <CartBadge className="absolute -top-0.5 -right-0.5" />
+            <GearIcon className="h-[18px] w-[18px]" />
           </Link>
-          <IconButton href="/search" label="جستجو">
-            <SearchIcon className="h-[22px] w-[22px]" />
-          </IconButton>
-          <span className="hidden md:block">
-            <IconButton href="/profile" label="حساب کاربری">
-              <UserIcon className="h-[22px] w-[22px]" />
-            </IconButton>
-          </span>
-          <span className="hidden md:block">
-            <IconButton href="/help" label="راهنما">
-              <HelpIcon className="h-[22px] w-[22px]" />
-            </IconButton>
-          </span>
         </div>
       </div>
     </header>

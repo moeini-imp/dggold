@@ -1,16 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/components/cart/CartProvider";
+import { useResolvedCartLines } from "@/components/cart/useResolvedCartLines";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { CartLineItem } from "@/components/cart/CartLineItem";
 import { CheckoutSteps } from "@/components/checkout/CheckoutSteps";
 import { CartIcon } from "@/components/ui/icons";
-import { resolveCartLines } from "@/lib/api";
 import { formatToman, toPersianDigits } from "@/lib/format";
-import type { CartDisplayLine } from "@/lib/types";
 
 function EmptyCart() {
   return (
@@ -60,9 +58,9 @@ function SummaryRows({
 
 export function CartView() {
   const router = useRouter();
-  const { lines, hydrated, setQty, remove } = useCart();
+  const { hydrated, setQty, remove } = useCart();
   const { isAuthenticated } = useAuth();
-  const [details, setDetails] = useState<CartDisplayLine[]>([]);
+  const details = useResolvedCartLines();
 
   // Checkout requires login: go straight to checkout if signed in, else to the
   // login/OTP flow with a redirect back to checkout.
@@ -71,16 +69,6 @@ export function CartView() {
       isAuthenticated ? "/checkout" : "/login?redirect=/checkout",
     );
   };
-
-  useEffect(() => {
-    let active = true;
-    resolveCartLines(lines).then((d) => {
-      if (active) setDetails(d);
-    });
-    return () => {
-      active = false;
-    };
-  }, [lines]);
 
   const total = details.reduce((s, l) => s + l.lineTotal, 0);
   const count = details.reduce((s, l) => s + l.quantity, 0);
