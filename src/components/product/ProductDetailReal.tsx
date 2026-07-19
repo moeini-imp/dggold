@@ -106,35 +106,38 @@ export function ProductDetailReal({
             </div>
           ) : null}
 
-          <div className="flex flex-col gap-2.5">
-            {[
-              "کمترین کارمزد ساخت در بازار",
-              "امکان استعلام آنلاین اصالت کالا",
-              "بسته‌بندی امن و قابل استرداد تا ۷۲ ساعت",
-            ].map((b) => (
-              <div key={b} className="flex items-start gap-2.5 text-sm text-ink/80">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-gold-500" />
-                <span>{b}</span>
-              </div>
-            ))}
-          </div>
-
           <PriceBreakdown detail={detail} />
         </div>
 
         {/* purchase (sticky) */}
         <div className="min-w-0 space-y-4.5 rounded-[20px] border border-line bg-surface p-6 md:sticky md:top-24">
-          <div className="flex items-center gap-3">
-            <span className="grid h-10.5 w-10.5 shrink-0 place-items-center rounded-xl bg-teal-600 text-[15px] font-extrabold text-gold-300">
-              {(detail.vendor?.name || "د").charAt(0)}
-            </span>
-            <div className="flex flex-col">
-              <span className="text-[11px] text-muted">فروشنده</span>
-              <span className="text-sm font-bold text-ink">
-                {detail.vendor?.name || "دیجی گلد"}
+          {detail.vendor?.englishName ? (
+            <Link
+              href={`/${encodeURIComponent(detail.vendor.englishName)}`}
+              className="flex items-center gap-3 transition hover:opacity-80"
+            >
+              <span className="grid h-10.5 w-10.5 shrink-0 place-items-center rounded-xl bg-teal-600 text-[15px] font-extrabold text-gold-300">
+                {detail.vendor.name.charAt(0) || "د"}
               </span>
+              <div className="flex min-w-0 flex-1 flex-col">
+                <span className="text-[11px] text-muted">فروشنده</span>
+                <span className="truncate text-sm font-bold text-ink">
+                  {detail.vendor.name}
+                </span>
+              </div>
+              <ChevronLeft className="h-4 w-4 shrink-0 text-muted" />
+            </Link>
+          ) : (
+            <div className="flex items-center gap-3">
+              <span className="grid h-10.5 w-10.5 shrink-0 place-items-center rounded-xl bg-teal-600 text-[15px] font-extrabold text-gold-300">
+                د
+              </span>
+              <div className="flex flex-col">
+                <span className="text-[11px] text-muted">فروشنده</span>
+                <span className="text-sm font-bold text-ink">دیجی گلد</span>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="border-t border-line pt-4">
             <p className="text-xs text-muted">
@@ -183,15 +186,6 @@ export function ProductDetailReal({
               مشاهده سبد خرید
             </Link>
           ) : null}
-
-          <div className="flex flex-col gap-3 pt-1">
-            {["ضمانت اصالت و فاکتور رسمی", "تحویل فیزیکی در همان روز"].map((t) => (
-              <div key={t} className="flex items-center gap-2.5">
-                <span className="h-7.5 w-7.5 shrink-0 rounded-full bg-canvas" />
-                <span className="text-xs text-ink/80">{t}</span>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
 
@@ -203,8 +197,12 @@ export function ProductDetailReal({
           <section className="mt-9">
             <div className="mb-6 flex items-baseline justify-between">
               <h2 className="text-[22px] font-extrabold text-ink">محصولات مرتبط</h2>
-              <Link href="/categories" className="text-sm font-semibold text-teal-700">
-                مشاهده همه ‹
+              <Link
+                href="/categories"
+                className="flex items-center gap-0.5 text-sm font-semibold text-teal-700"
+              >
+                مشاهده همه
+                <ChevronLeft className="h-4 w-4" />
               </Link>
             </div>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 md:gap-5">

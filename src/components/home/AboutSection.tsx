@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronDown } from "@/components/ui/icons";
+import { ChevronDown, ChevronLeft } from "@/components/ui/icons";
 
 const bullets = [
   "خرید طلای آب‌شده با کمترین کارمزد برای سرمایه‌گذاری",
@@ -52,9 +52,10 @@ export function AboutSection() {
             </div>
             <Link
               href="#prices"
-              className="mt-4 inline-block text-sm font-semibold text-teal-700"
+              className="mt-4 inline-flex items-center gap-0.5 text-sm font-semibold text-teal-700"
             >
-              قیمت لحظه‌ای طلا و سکه ‹
+              قیمت لحظه‌ای طلا و سکه
+              <ChevronLeft className="h-4 w-4" />
             </Link>
           </div>
           <div className="flex flex-col gap-5 rounded-2xl bg-canvas p-7">

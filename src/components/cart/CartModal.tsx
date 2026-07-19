@@ -157,7 +157,7 @@ export function CartModal() {
             </div>
             <div className="flex gap-3">
               <Link
-                href="/checkout"
+                href="/cart"
                 onClick={closeModal}
                 className="flex flex-1 items-center justify-center rounded-[13px] bg-teal-600 py-3.5 text-sm font-bold text-gold-300 transition hover:bg-teal-700"
               >

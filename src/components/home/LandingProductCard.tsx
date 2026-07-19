@@ -48,7 +48,7 @@ export function LandingProductCard({ product }: { product: LandingProduct }) {
         <ProductImage
           src={product.imageUrl}
           alt={product.name}
-          className="h-[120px] w-full rounded-xl bg-canvas"
+          className="aspect-square w-full rounded-xl bg-canvas"
         />
         <div>
           <h3 className="line-clamp-2 min-h-[2.6em] text-sm font-bold leading-relaxed text-ink">
@@ -78,9 +78,6 @@ export function LandingProductCard({ product }: { product: LandingProduct }) {
           ) : null}
           <p className="truncate text-lg font-extrabold text-ink tnum">
             {formatToman(product.finalPrice)}
-          </p>
-          <p className="mt-1 text-[11px] font-medium text-teal-600">
-            قابل خرید اقساطی
           </p>
         </Link>
 

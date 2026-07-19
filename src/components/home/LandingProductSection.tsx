@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LandingProductCard } from "@/components/home/LandingProductCard";
+import { ChevronLeft } from "@/components/ui/icons";
 import type { LandingComponent } from "@/lib/shop/landing";
 
 /** A backend-composed homepage product section — name/order/content stay
@@ -20,8 +21,12 @@ export function LandingProductSection({
           {component.badge ? <span>{component.badge}</span> : null}
         </h2>
         {component.hasMore ? (
-          <Link href={moreHref} className="text-sm font-semibold text-teal-700">
-            {component.buttonText || "مشاهده همه"} ‹
+          <Link
+            href={moreHref}
+            className="flex items-center gap-0.5 text-sm font-semibold text-teal-700"
+          >
+            {component.buttonText || "مشاهده همه"}
+            <ChevronLeft className="h-4 w-4" />
           </Link>
         ) : null}
       </div>

@@ -1,7 +1,10 @@
+import { HScroller } from "@/components/ui/HScroller";
 import type { PaymentGateway } from "@/lib/shop/payment";
 
 /**
- * Homepage trust grid — payment gateway LOGOS only (no names/descriptions).
+ * Homepage trust strip — payment gateway LOGOS only (no names/descriptions).
+ * Always a single row of equal-size square tiles; scrolls horizontally once
+ * there are more than fit the container instead of wrapping to a grid.
  */
 export function HomePaymentGateways({
   gateways,
@@ -19,21 +22,23 @@ export function HomePaymentGateways({
       <p className="mt-1 text-sm text-muted">
         خرید اقساطی طلا و سکه از درگاه‌های طرف‌قرارداد
       </p>
-      <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-        {withLogo.map((g) => (
-          <span
-            key={g.id}
-            title={g.name}
-            className="grid h-[72px] place-items-center overflow-hidden rounded-2xl border border-line bg-surface"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={g.imageUrl}
-              alt={g.name}
-              className="h-full w-full object-contain p-3"
-            />
-          </span>
-        ))}
+      <div className="mt-6">
+        <HScroller centerWhenFits>
+          {withLogo.map((g) => (
+            <span
+              key={g.id}
+              title={g.name}
+              className="grid aspect-square h-20 shrink-0 place-items-center overflow-hidden rounded-2xl border border-line bg-surface md:h-24"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={g.imageUrl}
+                alt={g.name}
+                className="h-full w-full object-contain p-3"
+              />
+            </span>
+          ))}
+        </HScroller>
       </div>
     </section>
   );

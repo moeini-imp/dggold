@@ -3,7 +3,6 @@ import { LandingProductSection } from "@/components/home/LandingProductSection";
 import { HomeCategories } from "@/components/home/HomeCategories";
 import { HomePaymentGateways } from "@/components/home/HomePaymentGateways";
 import { LivePriceBar } from "@/components/home/LivePriceBar";
-import { Hero } from "@/components/home/Hero";
 import { DiscountedProducts } from "@/components/home/DiscountedProducts";
 import { DeliveryBanner } from "@/components/home/DeliveryBanner";
 import { AboutSection } from "@/components/home/AboutSection";
@@ -28,7 +27,6 @@ export default async function Home() {
   return (
     <div className="pb-8">
       <LivePriceBar prices={prices} />
-      <Hero />
 
       {sliders.map((c, i) => (
         <LandingSlider key={`${c.id}-${i}`} images={c.images} />
