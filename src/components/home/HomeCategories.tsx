@@ -11,16 +11,18 @@ function FallbackIcon() {
   );
 }
 
-/** Homepage category icon row — the real category tree's top-level (root)
- *  nodes, 92×92 tiles; centered when they fit, scrolls once there are more. */
+/** Homepage category icon row — the first-level children of the category tree
+ *  (not the root/parent nodes), 92×92 tiles; centered when they fit, scrolls
+ *  once there are more. Falls back to the roots if none have children. */
 export function HomeCategories({ categories }: { categories: CategoryTreeNode[] }) {
-  const topLevel = categories;
-  if (!topLevel.length) return null;
+  const children = categories.flatMap((c) => c.children);
+  const items = children.length ? children : categories;
+  if (!items.length) return null;
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-7 md:px-8">
       <HScroller className="pb-1" centerWhenFits>
-        {topLevel.map((c) => (
+        {items.map((c) => (
           <Link
             key={c.id}
             href={`/category/${encodeURIComponent(c.name)}?cid=${c.id}`}

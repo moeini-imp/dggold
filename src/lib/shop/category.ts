@@ -1,4 +1,5 @@
 import { shopGetJson } from "@/lib/shop/http";
+import { psychologicalOffer } from "@/lib/shop/pricing";
 import { products as mockProducts } from "@/lib/mock/data";
 import type { LandingProduct } from "@/lib/shop/landing";
 
@@ -81,10 +82,8 @@ export async function getCategoryTree(): Promise<CategoryTreeNode[] | null> {
  * add-to-cart directly instead of only linking through to the product page.
  */
 export function normListProduct(p: Raw): LandingProduct {
-  const discount = (p.discount ?? {}) as Raw;
-  const percent = num(discount.percent);
-  const raw = num(discount.rawValue);
-  const total = num(p.totalPrice);
+  const cash = num(p.cashPrice) || num(p.totalPrice); // totalPrice = old API
+  const offer = psychologicalOffer(cash, num(p.psychologicalOfferPriceRatio));
   const imagesUrl = Array.isArray(p.imagesUrl) ? (p.imagesUrl as unknown[]) : [];
   const vendor = p.vendor as Raw | null;
   return {
@@ -97,9 +96,10 @@ export function normListProduct(p: Raw): LandingProduct {
     name: String(p.name ?? ""),
     info: String(p.info ?? ""),
     weight: num(p.weight),
-    totalPrice: total,
-    finalPrice: percent > 0 && raw > 0 ? raw : total,
-    discountPercent: percent,
+    totalPrice: offer.originalPrice || cash,
+    finalPrice: offer.finalPrice,
+    discountPercent: offer.discountPercent,
+    creditPrice: num(p.creditPrice) || cash,
   };
 }
 

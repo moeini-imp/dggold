@@ -4,7 +4,7 @@ import { HeaderBack } from "@/components/layout/HeaderBack";
 import { CategoryMenu } from "@/components/layout/CategoryMenu";
 import { UserMenu } from "@/components/layout/UserMenu";
 import { HeaderCartButton } from "@/components/layout/HeaderCartButton";
-import { SearchIcon } from "@/components/ui/icons";
+import { SearchIcon, WalletIcon } from "@/components/ui/icons";
 import type { CategoryTreeNode } from "@/lib/shop/category";
 
 export function Header({ categories }: { categories: CategoryTreeNode[] }) {
@@ -31,8 +31,16 @@ export function Header({ categories }: { categories: CategoryTreeNode[] }) {
         <Logo className="md:absolute md:left-1/2 md:-translate-x-1/2" />
 
         {/* Left (RTL end): icon cluster */}
-        <div dir="ltr" className="flex items-center gap-2 md:gap-4.5">
+        <div dir="ltr" className="flex items-center gap-2 md:gap-3">
           <HeaderCartButton />
+          {/* wallet — desktop only (mobile reaches it via the bottom nav) */}
+          <Link
+            href="/wallet"
+            aria-label="کیف پول"
+            className="hidden h-10 w-10 place-items-center rounded-[10px] border border-line bg-surface text-ink transition hover:bg-canvas md:grid"
+          >
+            <WalletIcon className="h-5 w-5" />
+          </Link>
           <span className="md:hidden">
             <Link
               href="/search"

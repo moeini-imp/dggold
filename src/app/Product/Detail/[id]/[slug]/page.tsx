@@ -5,6 +5,8 @@ import {
   buildMockProductDetail,
   getRelatedProducts,
 } from "@/lib/shop/product";
+import { getLastAssetPrices, buildMockAssetPrices } from "@/lib/shop/assetPrice";
+import { sootForToman } from "@/lib/wallet/granule";
 
 export async function generateMetadata({
   params,
@@ -23,8 +25,24 @@ export default async function ProductDetailPage({
   params: Promise<{ id: string; slug: string }>;
 }) {
   const { id, slug } = await params;
-  const detail =
-    (await getProductDetail(id, slug)) ?? buildMockProductDetail(id, slug);
+  const [detail0, prices] = await Promise.all([
+    getProductDetail(id, slug),
+    getLastAssetPrices(),
+  ]);
+  const detail = detail0 ?? buildMockProductDetail(id, slug);
   const related = detail.id ? await getRelatedProducts(detail.id) : [];
-  return <ProductDetailReal detail={detail} related={related} />;
+
+  // How many سوت of gold granule this product's price is worth (symbol 3 =
+  // طلای آب‌شده, per-gram Toman). Lets a buyer gauge it against wallet granule.
+  const goldPricePerGram =
+    (prices ?? buildMockAssetPrices()).find((p) => p.symbol === 3)?.price ?? 0;
+  const granuleSoot = sootForToman(detail.totalPrice, goldPricePerGram);
+
+  return (
+    <ProductDetailReal
+      detail={detail}
+      related={related}
+      granuleSoot={granuleSoot}
+    />
+  );
 }

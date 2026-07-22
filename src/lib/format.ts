@@ -5,6 +5,28 @@
 
 const PERSIAN_DIGITS = ["۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹"];
 
+/**
+ * Show only the human-readable Persian from a backend error — strips leaked
+ * JSON, English/technical noise ("Tara getToken returned…"), etc.
+ */
+export function persianError(
+  msg: string | null | undefined,
+  fallback = "خطایی رخ داد. لطفاً دوباره تلاش کنید.",
+): string {
+  if (!msg) return fallback;
+  const runs = msg.match(
+    /[؀-ۿ][؀-ۿ‌\s،.:؛؟0-9()٪\-]*/g,
+  );
+  if (!runs) return fallback;
+  const out = runs
+    .map((r) => r.trim())
+    .filter(Boolean)
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return out || fallback;
+}
+
 /** Convert any ASCII digits in a string/number to Persian digits. */
 export function toPersianDigits(input: string | number): string {
   return String(input).replace(/[0-9]/g, (d) => PERSIAN_DIGITS[Number(d)]);

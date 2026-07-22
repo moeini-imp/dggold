@@ -31,7 +31,10 @@ export interface ProductDetail {
   tax: Money; // مالیات
   discount: Money; // تخفیف (rawValue = amount in detail)
   extraCost: number; // هزینه‌های جانبی
-  totalPrice: number; // قیمت نهایی
+  totalPrice: number; // = cashPrice (kept for the price-breakdown "قیمت نهایی")
+  cashPrice: number; // default price
+  creditPrice: number; // price via a credit/installment gateway
+  psychologicalOfferPriceRatio: number; // % used to fake a struck "original"
   vendor: ProductVendor | null;
   dynamicProperties: { title: string; value: string }[];
   similarProducts: LandingProduct[];
@@ -77,7 +80,10 @@ function normDetail(d: Raw): ProductDetail {
     tax: money(d.tax),
     discount: money(d.discount),
     extraCost: num(d.extraCost),
-    totalPrice: num(d.totalPrice),
+    totalPrice: num(d.cashPrice) || num(d.totalPrice),
+    cashPrice: num(d.cashPrice) || num(d.totalPrice), // totalPrice = old API
+    creditPrice: num(d.creditPrice) || num(d.cashPrice) || num(d.totalPrice),
+    psychologicalOfferPriceRatio: num(d.psychologicalOfferPriceRatio),
     vendor: vendorRaw
       ? {
           id: num(vendorRaw.id),
@@ -153,6 +159,9 @@ export function buildMockProductDetail(
     discount: { rawValue: 50722617, percent: 2 },
     extraCost: 12000000,
     totalPrice: 2530204212,
+    cashPrice: 2530204212,
+    creditPrice: 2680000000,
+    psychologicalOfferPriceRatio: 4,
     vendor: {
       id: 1,
       name: "معین طلا",

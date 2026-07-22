@@ -90,6 +90,7 @@ export interface CartLineMeta {
   imageUrl: string;
   vendorName: string;
   unitPrice: number;
+  creditUnitPrice?: number;
   originalUnitPrice?: number;
   maxQuantity: number;
 }
@@ -110,6 +111,7 @@ export interface CartDisplayLine {
   imageUrl: string;
   vendorName: string;
   unitPrice: number;
+  creditUnitPrice?: number;
   originalUnitPrice?: number;
   quantity: number;
   maxQuantity: number;

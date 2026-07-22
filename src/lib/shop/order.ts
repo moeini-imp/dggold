@@ -1,12 +1,23 @@
 /** Order creation (via our proxy, which forwards the bearer token). */
 
+/** A slice of the order paid from a wallet sub-account (ledger account). */
+export interface WalletAllocation {
+  ledgerAccountId: string; // wallet overview subWallets[].accountId
+  amount: number;
+  assetCode: string; // "IRR" | "XAU" | "XAG"
+}
+
 export interface AddOrderPayload {
   addressId: number;
   shippingTypeId: number;
   idempotencyKey: string;
+  /** Optional buyer note entered on the checkout page. */
+  buyerComment: string;
   paymentGatewayId: number;
   callbackUrl: string;
   products: { id: number; quantity: number }[];
+  /** Amounts drawn from the user's wallet balances (rial / gold). */
+  walletAllocations?: WalletAllocation[];
 }
 
 export interface AddOrderData {

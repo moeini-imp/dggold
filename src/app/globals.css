@@ -83,10 +83,6 @@ body {
   /* Persian text reads better with a touch more leading */
   line-height: 1.7;
   -webkit-font-smoothing: antialiased;
-  /* Faint branching gold-vein marbling — barely visible, not decorative */
-  background-image: url("/gold-veins.png");
-  background-size: 820px 820px;
-  background-repeat: repeat;
 }
 
 /* Tabular numerals for prices so digits align */

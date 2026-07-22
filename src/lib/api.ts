@@ -96,6 +96,7 @@ export async function resolveCartLines(
           imageUrl: line.meta.imageUrl,
           vendorName: line.meta.vendorName,
           unitPrice: line.meta.unitPrice,
+          creditUnitPrice: line.meta.creditUnitPrice,
           originalUnitPrice: line.meta.originalUnitPrice,
           quantity: line.quantity,
           maxQuantity: line.meta.maxQuantity,

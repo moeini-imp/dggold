@@ -31,6 +31,14 @@ export const GridIcon = (p: P) => (
   </svg>
 );
 
+export const WalletIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M3 8a2 2 0 0 1 2-2h12.5a1.5 1.5 0 0 1 1.5 1.5V9" />
+    <path d="M3 8v9a2 2 0 0 0 2 2h13a1 1 0 0 0 1-1v-3" />
+    <path d="M21 10.5v3.5a.5.5 0 0 1-.5.5H17a2.25 2.25 0 0 1 0-4.5h3.5a.5.5 0 0 1 .5.5Z" />
+  </svg>
+);
+
 export const CartIcon = (p: P) => (
   <svg {...base(p)}>
     <circle cx="9" cy="20" r="1.4" />

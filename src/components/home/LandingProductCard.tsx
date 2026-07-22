@@ -31,6 +31,7 @@ export function LandingProductCard({ product }: { product: LandingProduct }) {
       imageUrl: product.imageUrl,
       vendorName: product.vendorName ?? "دیجی گلد",
       unitPrice: product.finalPrice,
+      creditUnitPrice: product.creditPrice || undefined,
       originalUnitPrice: hasDiscount ? product.totalPrice : undefined,
       maxQuantity: 10,
     });
@@ -38,7 +39,7 @@ export function LandingProductCard({ product }: { product: LandingProduct }) {
   };
 
   return (
-    <article className="group relative flex h-full flex-col gap-3.5 rounded-card border border-line bg-surface p-5 shadow-card transition hover:shadow-pop">
+    <article className="group relative flex h-full flex-col gap-3.5 rounded-card border border-line bg-surface p-4 shadow-card transition hover:shadow-pop sm:p-5">
       <Link href={href} className="flex flex-col gap-3.5">
         {hasDiscount ? (
           <span className="absolute left-3.5 top-3.5 z-10 rounded-lg bg-danger px-2 py-1 text-[11px] font-bold text-surface">
@@ -54,30 +55,26 @@ export function LandingProductCard({ product }: { product: LandingProduct }) {
           <h3 className="line-clamp-2 min-h-[2.6em] text-sm font-bold leading-relaxed text-ink">
             {product.name}
           </h3>
-          <div className="mt-1.5 flex flex-wrap gap-2">
-            {product.weight > 0 ? (
-              <span className="rounded-md bg-gold-100 px-2 py-0.5 text-[11px] text-gold-600">
-                {toPersianDigits(product.weight)} گرم
-              </span>
-            ) : null}
-            {product.info ? (
-              <span className="rounded-md bg-canvas px-2 py-0.5 text-[11px] text-muted">
-                {product.info}
-              </span>
-            ) : null}
-          </div>
+          {product.weight > 0 ? (
+            <span className="mt-1.5 inline-flex w-fit rounded-full bg-gold-100 px-2.5 py-0.5 text-[11px] font-medium text-gold-600">
+              {toPersianDigits(product.weight)} گرم
+            </span>
+          ) : null}
         </div>
       </Link>
 
       <div className="mt-auto flex items-end justify-between gap-2.5">
         <Link href={href} className="min-w-0 flex-1" aria-label={product.name}>
           {hasDiscount ? (
-            <p className="truncate text-xs text-muted line-through tnum">
+            <p className="truncate text-[11px] text-muted line-through">
               {formatToman(product.totalPrice, false)}
             </p>
           ) : null}
-          <p className="truncate text-lg font-extrabold text-ink tnum">
-            {formatToman(product.finalPrice)}
+          {/* number-only on mobile (narrow 2-col cards clip a full "… تومان");
+              the "تومان" suffix returns from sm up. */}
+          <p className="text-[13px] font-normal text-teal-700 sm:text-base">
+            {formatToman(product.finalPrice, false)}
+            <span className="hidden sm:inline"> تومان</span>
           </p>
         </Link>
 
@@ -85,7 +82,7 @@ export function LandingProductCard({ product }: { product: LandingProduct }) {
           type="button"
           aria-label="افزودن به سبد خرید"
           onClick={handleAdd}
-          className="grid h-10 w-10 shrink-0 place-items-center rounded-[11px] bg-teal-600 text-gold-300 transition hover:bg-teal-700"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-teal-600 text-gold-300 transition hover:bg-teal-700"
         >
           <CartIcon className="h-[18px] w-[18px]" />
         </button>

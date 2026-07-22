@@ -8,6 +8,8 @@ import { LandingProductCard } from "@/components/home/LandingProductCard";
 import { QtyStepper } from "@/components/ui/QtyStepper";
 import { ChevronDown, ChevronLeft, CartIcon } from "@/components/ui/icons";
 import { formatToman, toPersianDigits } from "@/lib/format";
+import { formatGranule } from "@/lib/wallet/granule";
+import { psychologicalOffer } from "@/lib/shop/pricing";
 import type { CartLineMeta } from "@/lib/types";
 import type { ProductDetail, Money } from "@/lib/shop/product";
 import type { LandingProduct } from "@/lib/shop/landing";
@@ -15,9 +17,11 @@ import type { LandingProduct } from "@/lib/shop/landing";
 export function ProductDetailReal({
   detail,
   related,
+  granuleSoot = 0,
 }: {
   detail: ProductDetail;
   related: LandingProduct[];
+  granuleSoot?: number;
 }) {
   const { getQuantity, add, setQty, remove, openModal } = useCart();
 
@@ -26,11 +30,14 @@ export function ProductDetailReal({
   const max = detail.countAvailable || 10;
   const qty = getQuantity(productId, vendorId);
 
-  const hasDiscount = detail.discount.percent > 0 && detail.discount.rawValue > 0;
-  const finalPrice = detail.totalPrice;
-  const originalPrice = hasDiscount
-    ? detail.totalPrice + detail.discount.rawValue
-    : undefined;
+  // cashPrice is the default; the psychological ratio only fakes a struck price.
+  const offer = psychologicalOffer(
+    detail.cashPrice,
+    detail.psychologicalOfferPriceRatio,
+  );
+  const finalPrice = offer.finalPrice;
+  const originalPrice = offer.originalPrice || undefined;
+  const hasDiscount = offer.discountPercent > 0;
 
   const meta: CartLineMeta = {
     slug: detail.slug,
@@ -38,6 +45,7 @@ export function ProductDetailReal({
     imageUrl: detail.imagesUrl[0] ?? "",
     vendorName: detail.vendor?.name ?? "دیجی گلد",
     unitPrice: finalPrice,
+    creditUnitPrice: detail.creditPrice || undefined,
     originalUnitPrice: originalPrice,
     maxQuantity: max,
   };
@@ -89,7 +97,7 @@ export function ProductDetailReal({
             {detail.categoryName ? (
               <SpecRow label="جنس" value={detail.categoryName} />
             ) : null}
-            <SpecRow label="سازنده" value={detail.vendor?.name || "دیجی گلد"} />
+            <SpecRow label="فروشنده" value={detail.vendor?.name || "دیجی گلد"} />
             <SpecRow label="ضمانت" value="اصالت کالا و فاکتور رسمی" last />
           </div>
 
@@ -154,6 +162,11 @@ export function ProductDetailReal({
             <p className="mt-1.5 text-xs font-medium text-teal-600">
               قابل خرید اقساطی
             </p>
+            {granuleSoot > 0 ? (
+              <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-gold-100 px-3 py-1 text-xs font-medium text-gold-600">
+                معادل {formatGranule(granuleSoot)} گرانول طلا
+              </p>
+            ) : null}
           </div>
 
           {qty > 0 ? (
@@ -193,7 +206,6 @@ export function ProductDetailReal({
 
       {related.length ? (
         <>
-          <WeightChipsSection products={related} />
           <section className="mt-9">
             <div className="mb-6 flex items-baseline justify-between">
               <h2 className="text-[22px] font-extrabold text-ink">محصولات مرتبط</h2>
@@ -304,44 +316,6 @@ function IntroSection({ text }: { text: string }) {
             />
           </button>
         </div>
-      </div>
-    </section>
-  );
-}
-
-/**
- * "سایر وزن‌های این محصول" — the backend has no variant-grouping concept (each
- * weight is a fully separate product), so this uses the same real
- * related-products list, styled as a chip row; each chip links to its own
- * product page rather than swapping state in place.
- */
-function WeightChipsSection({ products }: { products: LandingProduct[] }) {
-  return (
-    <section className="mt-9">
-      <h2 className="mb-5 text-[22px] font-extrabold text-ink">
-        سایر وزن‌های این محصول
-      </h2>
-      <div className="no-scrollbar flex gap-4 overflow-x-auto pb-1">
-        {products.map((p) => {
-          const href = p.slug
-            ? `/Product/Detail/${p.id}/${encodeURIComponent(p.slug)}`
-            : `/Product/Detail/${p.id}/-`;
-          return (
-            <Link
-              key={p.id}
-              href={href}
-              className="flex w-[170px] shrink-0 flex-col items-center gap-2.5 rounded-2xl border-2 border-line bg-surface px-5 py-5 text-center transition hover:border-teal-300"
-            >
-              <span className="h-10.5 w-[58px] rounded-lg bg-gradient-to-br from-gold-200 to-gold-500" />
-              <span className="line-clamp-1 text-sm font-bold text-ink">
-                {p.weight > 0 ? `${toPersianDigits(p.weight)} گرم` : p.name}
-              </span>
-              <span className="text-[13px] font-bold text-ink tnum">
-                {formatToman(p.finalPrice)}
-              </span>
-            </Link>
-          );
-        })}
       </div>
     </section>
   );

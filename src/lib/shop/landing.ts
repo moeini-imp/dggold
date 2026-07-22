@@ -1,5 +1,6 @@
 import { shopGetJson } from "@/lib/shop/http";
 import { products as mockProducts } from "@/lib/mock/data";
+import { psychologicalOffer } from "@/lib/shop/pricing";
 
 /**
  * Landing page is composed of ordered components from the backend:
@@ -21,9 +22,10 @@ export interface LandingProduct {
   name: string;
   info: string;
   weight: number;
-  totalPrice: number; // original price
-  finalPrice: number; // after discount
+  totalPrice: number; // struck "original" (psychological offer)
+  finalPrice: number; // cashPrice
   discountPercent: number;
+  creditPrice?: number; // price when a credit/installment gateway is used
 }
 
 export interface LandingSliderImage {
@@ -52,10 +54,8 @@ function num(v: unknown): number {
 }
 
 function normProduct(p: Raw): LandingProduct {
-  const discount = (p.discount ?? {}) as Raw;
-  const percent = num(discount.percent);
-  const raw = num(discount.rawValue);
-  const total = num(p.totalPrice);
+  const cash = num(p.cashPrice) || num(p.totalPrice); // totalPrice = old API
+  const offer = psychologicalOffer(cash, num(p.psychologicalOfferPriceRatio));
   return {
     id: num(p.id),
     slug: p.slug ? String(p.slug) : undefined,
@@ -64,9 +64,10 @@ function normProduct(p: Raw): LandingProduct {
     name: String(p.name ?? ""),
     info: String(p.info ?? ""),
     weight: num(p.weight),
-    totalPrice: total,
-    finalPrice: percent > 0 && raw > 0 ? raw : total,
-    discountPercent: percent,
+    totalPrice: offer.originalPrice || cash,
+    finalPrice: offer.finalPrice,
+    discountPercent: offer.discountPercent,
+    creditPrice: num(p.creditPrice) || cash,
   };
 }
 

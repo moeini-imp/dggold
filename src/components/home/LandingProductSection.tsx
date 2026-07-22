@@ -15,6 +15,9 @@ export function LandingProductSection({
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 md:px-8">
+      {/* green divider between consecutive product shelves */}
+      <div className="mb-8 h-px bg-gradient-to-l from-transparent via-teal-600/60 to-transparent" />
+
       <div className="mb-6 flex items-baseline justify-between">
         <h2 className="flex items-center gap-2 text-[22px] font-extrabold text-ink">
           {component.name}
@@ -31,8 +34,10 @@ export function LandingProductSection({
         ) : null}
       </div>
 
+      {/* Cap to one desktop row (4 cols) so a section with 5+ products doesn't
+          wrap into a lonely second row; the rest live behind "مشاهده همه". */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 md:gap-5">
-        {component.products.map((p) => (
+        {component.products.slice(0, 4).map((p) => (
           <LandingProductCard key={p.id} product={p} />
         ))}
       </div>

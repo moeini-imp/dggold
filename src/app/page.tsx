@@ -4,8 +4,7 @@ import { HomeCategories } from "@/components/home/HomeCategories";
 import { HomePaymentGateways } from "@/components/home/HomePaymentGateways";
 import { LivePriceBar } from "@/components/home/LivePriceBar";
 import { DiscountedProducts } from "@/components/home/DiscountedProducts";
-import { DeliveryBanner } from "@/components/home/DeliveryBanner";
-import { AboutSection } from "@/components/home/AboutSection";
+import { HomeValues } from "@/components/home/HomeValues";
 import { getLandingComponents, buildMockLanding } from "@/lib/shop/landing";
 import { getCategoryTree, buildMockCategoryTree } from "@/lib/shop/category";
 import { getPaymentGateways, buildMockGateways } from "@/lib/shop/payment";
@@ -40,8 +39,7 @@ export default async function Home() {
         <LandingProductSection key={`${c.id}-${i}`} component={c} />
       ))}
 
-      <DeliveryBanner />
-      <AboutSection />
+      <HomeValues />
     </div>
   );
 }

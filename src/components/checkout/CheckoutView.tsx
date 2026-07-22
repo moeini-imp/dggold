@@ -21,16 +21,34 @@ import {
   getAddresses,
   type Address,
 } from "@/lib/shop/address";
-import { formatToman, toEnglishDigits, toPersianDigits } from "@/lib/format";
-import { addOrder, type AddOrderData } from "@/lib/shop/order";
+import {
+  formatToman,
+  persianError,
+  toEnglishDigits,
+  toPersianDigits,
+} from "@/lib/format";
+import {
+  addOrder,
+  type AddOrderData,
+  type AddOrderPayload,
+} from "@/lib/shop/order";
+import {
+  assetAmount,
+  buildMockWalletOverview,
+  getWalletOverview,
+  type WalletOverview,
+} from "@/lib/wallet/wallet";
+import { formatGranule, sootForToman } from "@/lib/wallet/granule";
 import type { CartDisplayLine } from "@/lib/types";
 
 export function CheckoutView({
   gateways,
   shippingTypes,
+  goldPricePerGram,
 }: {
   gateways: PaymentGateway[];
   shippingTypes: ShippingType[];
+  goldPricePerGram: number;
 }) {
   const router = useRouter();
   const { lines, hydrated, clear } = useCart();
@@ -48,7 +66,10 @@ export function CheckoutView({
   const [address, setAddress] = useState("");
   const [postalCode, setPostalCode] = useState("");
   const [gateway, setGateway] = useState(gateways[0]?.key ?? "");
+  const [walletPay, setWalletPay] = useState<"gold" | "rial" | null>(null);
+  const [wallet, setWallet] = useState<WalletOverview | null>(null);
   const [shippingId, setShippingId] = useState(shippingTypes[0]?.id ?? null);
+  const [buyerComment, setBuyerComment] = useState("");
   const [submitted, setSubmitted] = useState(false);
   // Stable across retries so a repeated pay click can't create duplicate orders.
   const idempotencyKey = useRef<string>("");
@@ -112,6 +133,18 @@ export function CheckoutView({
     };
   }, [lines]);
 
+  // wallet balances (for the "pay from wallet" option)
+  useEffect(() => {
+    if (!accessToken) return;
+    let active = true;
+    getWalletOverview(accessToken).then(
+      (o) => active && setWallet(o ?? buildMockWalletOverview()),
+    );
+    return () => {
+      active = false;
+    };
+  }, [accessToken]);
+
   // load provinces once authenticated
   useEffect(() => {
     if (!accessToken) return;
@@ -141,14 +174,38 @@ export function CheckoutView({
     };
   }, [accessToken, province]);
 
+  // A credit/installment gateway prices the order with creditPrice, not cash.
+  const useCredit = !!gateways.find((g) => g.key === gateway)?.isCredit;
   const itemsTotal = useMemo(
-    () => details.reduce((s, l) => s + l.lineTotal, 0),
-    [details],
+    () =>
+      details.reduce(
+        (s, l) =>
+          s +
+          (useCredit && l.creditUnitPrice ? l.creditUnitPrice : l.unitPrice) *
+            l.quantity,
+        0,
+      ),
+    [details, useCredit],
   );
   const count = details.reduce((s, l) => s + l.quantity, 0);
   const shipping = shippingTypes.find((s) => s.id === shippingId) ?? null;
   const shippingCost = shipping?.cost ?? 0;
   const total = itemsTotal + shippingCost;
+
+  // How much (Toman) the selected wallet covers of this order; the rest goes
+  // to the gateway. Gold balance is grams; rial balance is rial.
+  const walletCover = (() => {
+    if (!walletPay) return 0;
+    const w = wallet ?? buildMockWalletOverview();
+    if (walletPay === "gold") {
+      const orderMg =
+        goldPricePerGram > 0 ? Math.round((total / goldPricePerGram) * 1000) : 0;
+      const useMg = Math.min(orderMg, Math.round(assetAmount(w, "XAU") * 1000));
+      return Math.round((useMg / 1000) * goldPricePerGram);
+    }
+    return Math.round(Math.min(total * 10, assetAmount(w, "IRR")) / 10);
+  })();
+  const walletRemainder = Math.max(0, total - walletCover);
 
   const errors = {
     province: !province,
@@ -165,9 +222,49 @@ export function CheckoutView({
     setError("");
     if (details.length === 0 || !accessToken) return;
 
-    const gatewayId = gateways.find((g) => g.key === gateway)?.id;
-    if (!shippingId || !gatewayId) {
-      setError("شیوه ارسال و درگاه پرداخت را انتخاب کنید.");
+    if (!shippingId) {
+      setError("شیوه ارسال را انتخاب کنید.");
+      return;
+    }
+
+    // Wallet draws first (gold in mg, rial in rial) for whatever it can cover;
+    // the gateway covers any remainder and the backend returns a redirect. An
+    // empty wallet just contributes nothing — no allocation, gateway pays all.
+    let walletAllocations: AddOrderPayload["walletAllocations"];
+    let gatewayId = gateways.find((g) => g.key === gateway)?.id ?? 0;
+    if (walletPay) {
+      const w = wallet ?? buildMockWalletOverview();
+      const code = walletPay === "gold" ? "XAU" : "IRR";
+      const sub = w.subWallets.find((s) => s.assetCode === code);
+      let coversToman = 0;
+      if (sub?.accountId) {
+        let amount: number; // gold → mg, rial → rial
+        if (walletPay === "gold") {
+          const orderMg =
+            goldPricePerGram > 0
+              ? Math.round((total / goldPricePerGram) * 1000)
+              : 0;
+          amount = Math.min(orderMg, Math.round(sub.balance * 1000)); // balance is grams
+          coversToman = Math.round((amount / 1000) * goldPricePerGram);
+        } else {
+          amount = Math.min(total * 10, sub.balance); // total toman → rial
+          coversToman = Math.round(amount / 10);
+        }
+        if (amount > 0) {
+          walletAllocations = [
+            { ledgerAccountId: sub.accountId, amount, assetCode: code },
+          ];
+        }
+      }
+      // The gateway covers whatever the wallet didn't.
+      if (total - coversToman <= 0) {
+        gatewayId = 0; // wallet covered the whole order
+      } else if (!gatewayId) {
+        setError("درگاه پرداخت را انتخاب کنید.");
+        return;
+      }
+    } else if (!gatewayId) {
+      setError("درگاه پرداخت را انتخاب کنید.");
       return;
     }
 
@@ -213,6 +310,7 @@ export function CheckoutView({
         shippingTypeId: shippingId,
         paymentGatewayId: gatewayId,
         idempotencyKey: idempotencyKey.current,
+        buyerComment: buyerComment.trim(),
         // Backend redirects here after the gateway: /receipt/success?id=… or
         // /receipt/failed?id=…
         callbackUrl: `${window.location.origin}/receipt`,
@@ -220,6 +318,7 @@ export function CheckoutView({
           id: Number(l.productId),
           quantity: l.quantity,
         })),
+        ...(walletAllocations ? { walletAllocations } : {}),
       });
 
       if (result?.success && result.data?.redirectUrl) {
@@ -229,10 +328,17 @@ export function CheckoutView({
         setGatewayRedirect(result.data);
         return;
       }
+      // Fully wallet-paid orders settle without a gateway redirect.
+      if (result?.success) {
+        clear();
+        router.push("/checkout/success");
+        return;
+      }
       setError(
-        result?.errorMessage ||
-          result?.resultMessage ||
+        persianError(
+          result?.errorMessage || result?.resultMessage,
           "ثبت سفارش ناموفق بود. دوباره تلاش کنید.",
+        ),
       );
       setPaying(false);
     } catch {
@@ -483,6 +589,82 @@ export function CheckoutView({
             </section>
           ) : null}
 
+          {/* pay from wallet */}
+          <section className="rounded-card bg-surface p-5 shadow-card">
+            <h2 className="mb-4 font-bold text-ink">پرداخت از کیف پول</h2>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {(
+                [
+                  {
+                    key: "gold" as const,
+                    title: "کیف پول طلا",
+                    balance: `${toPersianDigits(assetAmount(wallet ?? buildMockWalletOverview(), "XAU"))} گرم`,
+                    note:
+                      goldPricePerGram > 0
+                        ? `معادل ${formatGranule(sootForToman(total, goldPricePerGram))} برای این سفارش`
+                        : "",
+                  },
+                  {
+                    key: "rial" as const,
+                    title: "کیف پول ریالی",
+                    balance: formatToman(
+                      Math.round(
+                        assetAmount(wallet ?? buildMockWalletOverview(), "IRR") /
+                          10,
+                      ),
+                    ),
+                    note: "",
+                  },
+                ]
+              ).map((w) => {
+                const selected = walletPay === w.key;
+                return (
+                  <button
+                    key={w.key}
+                    type="button"
+                    onClick={() => setWalletPay(selected ? null : w.key)}
+                    className={`flex min-w-0 items-center justify-between gap-3 rounded-card border p-3 text-right transition ${
+                      selected
+                        ? "border-teal-600 bg-teal-50"
+                        : "border-line hover:border-teal-300"
+                    }`}
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-bold text-ink">
+                        {w.title}
+                      </span>
+                      <span className="mt-0.5 block text-xs text-muted tnum">
+                        موجودی: {w.balance}
+                      </span>
+                      {w.note ? (
+                        <span className="mt-0.5 block text-[11px] text-teal-700 tnum">
+                          {w.note}
+                        </span>
+                      ) : null}
+                    </span>
+                    <span
+                      className={`grid h-5 w-5 shrink-0 place-items-center rounded-full border ${
+                        selected ? "border-teal-600" : "border-line"
+                      }`}
+                    >
+                      {selected ? (
+                        <span className="h-2.5 w-2.5 rounded-full bg-teal-600" />
+                      ) : null}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            {walletPay ? (
+              <p className="mt-3 text-xs text-muted tnum">
+                {formatToman(walletCover)} از کیف پول
+                {walletRemainder > 0
+                  ? ` + ${formatToman(walletRemainder)} از درگاه پرداخت`
+                  : " (کل مبلغ)"}
+              </p>
+            ) : null}
+          </section>
+
           {/* payment gateway */}
           <section className="rounded-card bg-surface p-5 shadow-card">
             <h2 className="mb-4 font-bold text-ink">انتخاب درگاه پرداخت</h2>
@@ -528,6 +710,22 @@ export function CheckoutView({
                 );
               })}
             </div>
+          </section>
+
+          {/* buyer note */}
+          <section className="rounded-card bg-surface p-5 shadow-card">
+            <h2 className="mb-4 font-bold text-ink">
+              یادداشت سفارش{" "}
+              <span className="font-normal text-muted">(اختیاری)</span>
+            </h2>
+            <textarea
+              value={buyerComment}
+              onChange={(e) => setBuyerComment(e.target.value)}
+              rows={3}
+              maxLength={500}
+              placeholder="اگر توضیحی برای این سفارش دارید اینجا بنویسید…"
+              className="w-full resize-none rounded-btn border border-line bg-canvas px-4 py-3 text-sm outline-none transition focus:border-teal-400"
+            />
           </section>
 
           {/* summary + pay on mobile */}

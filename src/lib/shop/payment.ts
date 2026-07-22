@@ -8,6 +8,8 @@ export interface PaymentGateway {
   description: string;
   key: string;
   isActive: boolean;
+  /** Credit/installment gateway → order priced with creditPrice, not cashPrice. */
+  isCredit: boolean;
   /** Gateway logo, when the backend provides one. Empty when absent. */
   imageUrl: string;
 }
@@ -34,6 +36,7 @@ export async function getPaymentGateways(): Promise<PaymentGateway[] | null> {
       description: String(g.description ?? ""),
       key: String(g.key ?? ""),
       isActive: g.isActive !== false,
+      isCredit: g.isCredit === true,
       imageUrl: String(g.imageUrl ?? ""),
     }))
     .filter((g) => g.isActive)
@@ -43,8 +46,8 @@ export async function getPaymentGateways(): Promise<PaymentGateway[] | null> {
 /** Fallback list (same shape) when the API is unreachable. */
 export function buildMockGateways(): PaymentGateway[] {
   return [
-    { id: 1, code: 14, orderIndex: 1, name: "درگاه پرداخت تارا", description: "پرداخت اعتباری و اقساطی تارا", key: "tara", isActive: true, imageUrl: "" },
-    { id: 2, code: 2, orderIndex: 2, name: "پرداخت امن اسمارتیز", description: "پرداخت با کارت‌های عضو شتاب", key: "smartiz", isActive: true, imageUrl: "" },
-    { id: 5, code: 5, orderIndex: 5, name: "درگاه هوشمند دیجی‌پی", description: "پرداخت اعتباری و اقساطی دیجی‌پی", key: "digipay", isActive: true, imageUrl: "" },
+    { id: 1, code: 14, orderIndex: 1, name: "درگاه پرداخت تارا", description: "پرداخت اعتباری و اقساطی تارا", key: "tara", isActive: true, isCredit: true, imageUrl: "" },
+    { id: 2, code: 2, orderIndex: 2, name: "پرداخت امن اسمارتیز", description: "پرداخت با کارت‌های عضو شتاب", key: "smartiz", isActive: true, isCredit: true, imageUrl: "" },
+    { id: 5, code: 5, orderIndex: 5, name: "درگاه هوشمند دیجی‌پی", description: "پرداخت اعتباری و اقساطی دیجی‌پی", key: "digipay", isActive: true, isCredit: true, imageUrl: "" },
   ];
 }
