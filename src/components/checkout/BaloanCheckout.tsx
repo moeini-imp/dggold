@@ -10,7 +10,6 @@ import {
   toPersianDigits,
 } from "@/lib/format";
 import {
-  BALOAN_RESUME_KEY,
   baloanCheckCredit,
   baloanSendOtp,
   baloanSettle,
@@ -21,23 +20,19 @@ const RESEND_SECONDS = 90;
 const NATIONAL_ID = /^\d{10}$/;
 
 /**
- * On-site Baloan credit checkout. Baloan has no hosted redirect page: the user
- * enters their national id, we check credit + send an SMS OTP, they enter it,
- * and we settle server-to-server against the already-created payment intent.
+ * On-site Baloan credit checkout — a standalone page the user lands on after the
+ * (uniform) gateway redirect: `{FRONT}/baloan/checkout?paymentIntentId=…`. They
+ * enter their national id, we check credit + send an SMS OTP, they enter it, and
+ * we settle server-to-server against the already-created payment intent.
  *
- * OTP is only ever sent from a click handler (never an effect) so React 19
- * StrictMode / re-mounts can't fire duplicate SMS. National id and OTP live in
- * component state only — never in the URL, storage, or logs.
+ * The intent id comes from the URL (reload-safe, not PII). OTP is only ever sent
+ * from a click handler (never an effect) so React 19 StrictMode / re-mounts can't
+ * fire duplicate SMS. National id and OTP live in component state only — never in
+ * the URL, storage, or logs.
  */
-export function BaloanCheckout({
-  paymentIntentId,
-  onCancel,
-}: {
-  paymentIntentId: string;
-  onCancel: () => void;
-}) {
+export function BaloanCheckout({ paymentIntentId }: { paymentIntentId: string }) {
   const router = useRouter();
-  const { accessToken } = useAuth();
+  const { accessToken, isAuthenticated, hydrated } = useAuth();
 
   const [step, setStep] = useState<"id" | "otp">("id");
   const [nationalId, setNationalId] = useState("");
@@ -48,14 +43,15 @@ export function BaloanCheckout({
   const [notice, setNotice] = useState("");
   const [cooldown, setCooldown] = useState(0);
 
-  // Remember the intent id (only the id) so a reload can resume here.
+  // Auth-guard the page: bounce unauthenticated users to login and back.
   useEffect(() => {
-    try {
-      sessionStorage.setItem(BALOAN_RESUME_KEY, paymentIntentId);
-    } catch {
-      /* storage unavailable — non-fatal */
+    if (hydrated && !isAuthenticated) {
+      const back = encodeURIComponent(
+        `/baloan/checkout?paymentIntentId=${paymentIntentId}`,
+      );
+      router.replace(`/login?redirect=${back}`);
     }
-  }, [paymentIntentId]);
+  }, [hydrated, isAuthenticated, paymentIntentId, router]);
 
   // Resend cooldown ticker.
   useEffect(() => {
@@ -66,14 +62,6 @@ export function BaloanCheckout({
 
   const idValid = NATIONAL_ID.test(nationalId);
   const otpValid = otp.length >= 4;
-
-  function clearResume() {
-    try {
-      sessionStorage.removeItem(BALOAN_RESUME_KEY);
-    } catch {
-      /* ignore */
-    }
-  }
 
   async function handleCheckAndSend() {
     if (!accessToken || !idValid || busy) return;
@@ -156,7 +144,6 @@ export function BaloanCheckout({
     const { status, message } = r.outcome;
 
     if (status === "Succeeded" || status === "AlreadySucceeded") {
-      clearResume();
       router.replace(`/receipt/success?id=${paymentIntentId}`);
       return; // keep busy = true through navigation
     }
@@ -187,8 +174,25 @@ export function BaloanCheckout({
   }
 
   function handleCancel() {
-    clearResume();
-    onCancel();
+    router.push("/cart");
+  }
+
+  // Invalid entry (e.g. opened without an intent id) — nothing to settle.
+  if (!paymentIntentId) {
+    return (
+      <div className="mx-auto max-w-md px-4 py-16 text-center">
+        <p className="mb-4 text-sm text-muted">
+          شناسه پرداخت نامعتبر است. لطفاً دوباره از سبد خرید اقدام کنید.
+        </p>
+        <button
+          type="button"
+          onClick={() => router.push("/cart")}
+          className="rounded-btn bg-teal-600 px-6 py-2.5 text-sm font-bold text-surface transition hover:bg-teal-700"
+        >
+          بازگشت به سبد خرید
+        </button>
+      </div>
+    );
   }
 
   return (

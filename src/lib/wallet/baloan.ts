@@ -7,12 +7,6 @@
  * Flow: check-credit → send-otp → settle. All amounts are Toman.
  */
 
-/** Wallet PaymentGateway enum value for Baloan (the stable discriminator). */
-export const BALOAN_GATEWAY_CODE = 16;
-
-/** sessionStorage key holding the in-flight Baloan intent id (id only, not PII). */
-export const BALOAN_RESUME_KEY = "baloan_pending_intent";
-
 export interface BaloanCreditInfo {
   userCreditToman: number;
   requiredToman: number;

@@ -9,8 +9,6 @@ import { CheckoutSteps } from "@/components/checkout/CheckoutSteps";
 import { AddressSelectModal } from "@/components/checkout/AddressSelectModal";
 import { PaymentGatewayIcon } from "@/components/checkout/PaymentGatewayIcon";
 import { GatewayRedirect } from "@/components/checkout/GatewayRedirect";
-import { BaloanCheckout } from "@/components/checkout/BaloanCheckout";
-import { BALOAN_GATEWAY_CODE, BALOAN_RESUME_KEY } from "@/lib/wallet/baloan";
 import { SearchSelect } from "@/components/ui/SearchSelect";
 import { TruckIcon } from "@/components/ui/icons";
 import type { PaymentGateway } from "@/lib/shop/payment";
@@ -86,17 +84,6 @@ export function CheckoutView({
   const [gatewayRedirect, setGatewayRedirect] = useState<AddOrderData | null>(
     null,
   );
-  // Baloan is on-site (OTP), not a redirect. When active, we render its own
-  // step-flow instead of handing off. Resume from sessionStorage after a reload.
-  const [baloanIntentId, setBaloanIntentId] = useState<string | null>(null);
-  useEffect(() => {
-    try {
-      const pending = sessionStorage.getItem(BALOAN_RESUME_KEY);
-      if (pending) setBaloanIntentId(pending);
-    } catch {
-      /* storage unavailable — ignore */
-    }
-  }, []);
 
   // province / city
   const [provinces, setProvinces] = useState<Place[]>([]);
@@ -244,8 +231,7 @@ export function CheckoutView({
     // the gateway covers any remainder and the backend returns a redirect. An
     // empty wallet just contributes nothing — no allocation, gateway pays all.
     let walletAllocations: AddOrderPayload["walletAllocations"];
-    const selectedGateway = gateways.find((g) => g.key === gateway);
-    let gatewayId = selectedGateway?.id ?? 0;
+    let gatewayId = gateways.find((g) => g.key === gateway)?.id ?? 0;
     if (walletPay) {
       const w = wallet ?? buildMockWalletOverview();
       const code = walletPay === "gold" ? "XAU" : "IRR";
@@ -342,20 +328,8 @@ export function CheckoutView({
         setGatewayRedirect(result.data);
         return;
       }
-      // Baloan: no redirect URL — drive the on-site OTP flow against the
-      // returned payment intent. Only when a gateway share actually exists.
-      if (
-        result?.success &&
-        gatewayId !== 0 &&
-        selectedGateway?.code === BALOAN_GATEWAY_CODE &&
-        result.data?.paymentIntentId
-      ) {
-        clear();
-        setBaloanIntentId(result.data.paymentIntentId);
-        return;
-      }
       // Fully wallet-paid orders settle without a gateway redirect.
-      if (result?.success && (gatewayId === 0 || result.data?.status === "Succeeded")) {
+      if (result?.success) {
         clear();
         router.push("/checkout/success");
         return;
@@ -371,15 +345,6 @@ export function CheckoutView({
       setError("خطا در ثبت سفارش. دوباره تلاش کنید.");
       setPaying(false);
     }
-  }
-
-  if (baloanIntentId) {
-    return (
-      <BaloanCheckout
-        paymentIntentId={baloanIntentId}
-        onCancel={() => setBaloanIntentId(null)}
-      />
-    );
   }
 
   if (gatewayRedirect) {
