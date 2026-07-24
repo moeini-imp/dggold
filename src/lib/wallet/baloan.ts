@@ -60,18 +60,33 @@ export async function baloanSettle(
   token: string,
   paymentIntentId: string,
   otp: string,
-): Promise<{ ok: boolean; outcome?: BaloanSettleOutcome; errorMessage?: string }> {
+): Promise<{
+  ok: boolean;
+  /** Present when the wallet answered like a callback: navigate here (receipt page). */
+  redirectUrl?: string;
+  /** Present on an older wallet build that returns a JSON status. */
+  outcome?: BaloanSettleOutcome;
+  errorMessage?: string;
+}> {
   const raw = await postBaloan("settle", token, { paymentIntentId, otp });
   if (raw && raw.success === true && raw.data) {
     const d = raw.data as Record<string, unknown>;
-    return {
-      ok: true,
-      outcome: {
-        status: String(d.status ?? ""),
-        success: d.success === true,
-        message: (d.message as string) ?? undefined,
-      },
-    };
+    // New (callback-style) wallet: a redirect to the receipt page.
+    if (typeof d.redirectUrl === "string" && d.redirectUrl) {
+      return { ok: true, redirectUrl: d.redirectUrl };
+    }
+    // Legacy wallet: JSON { status, success, message }.
+    if (d.status) {
+      return {
+        ok: true,
+        outcome: {
+          status: String(d.status),
+          success: d.success === true,
+          message: (d.message as string) ?? undefined,
+        },
+      };
+    }
   }
+  // Inconclusive (invalid OTP / pending) or a transport error — let the user retry.
   return { ok: false, errorMessage: envelopeError(raw) };
 }

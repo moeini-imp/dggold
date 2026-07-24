@@ -87,52 +87,45 @@ export function BaloanCheckout({
 
     const r = await baloanSettle(accessToken, paymentIntentId, otp);
 
-    // A network/proxy failure is ambiguous: credit MAY have been captured for
-    // this intent. Stay on this screen and let the user retry the SAME intent —
-    // never send them back to create a new order.
-    if (!r.ok || !r.outcome) {
-      setError(
-        persianError(
-          r.errorMessage,
-          "وضعیت پرداخت نامشخص است. لطفاً چند لحظه صبر کنید و دوباره «پرداخت» را بزنید.",
-        ),
-      );
-      setBusy(false);
-      return;
-    }
-
-    const { status, message } = r.outcome;
-
-    if (status === "Succeeded" || status === "AlreadySucceeded") {
-      router.replace(`/receipt/success?id=${paymentIntentId}`);
+    // The wallet answered like a gateway callback: a redirect to the receipt
+    // page (success or failed). Follow it — that page reads the final status.
+    if (r.ok && r.redirectUrl) {
+      window.location.assign(r.redirectUrl);
       return; // keep busy = true through navigation
     }
 
-    if (status === "OtpInvalid") {
-      // Also the normal follow-up to a Pending retry: the previous code was
-      // consumed, so allow an immediate resend rather than treating it as final.
+    // Legacy wallet build that returns a JSON status instead of a redirect.
+    if (r.ok && r.outcome) {
+      const { status, message } = r.outcome;
+
+      if (status === "Succeeded" || status === "AlreadySucceeded") {
+        router.replace(`/receipt/success?id=${paymentIntentId}`);
+        return;
+      }
+      if (status === "Failed") {
+        router.replace(`/receipt/failed?id=${paymentIntentId}`);
+        return;
+      }
+      // OtpInvalid / Pending → retryable below (fall through).
       setOtp("");
       setCooldown(0);
       setError(
         message ||
-          "کد تایید نامعتبر است یا منقضی شده. کد جدید بگیرید و دوباره تلاش کنید.",
+          "کد تایید نامعتبر است یا وضعیت پرداخت نامشخص است. کد را دوباره وارد کنید یا کد جدید بگیرید.",
       );
       setBusy(false);
       return;
     }
 
-    if (status === "Pending") {
-      // Baloan may already have captured — retry HERE only, do not re-order.
-      setError(
-        message ||
-          "وضعیت تسویه نامشخص است. لطفاً چند لحظه صبر کنید و دوباره «پرداخت» را بزنید. سفارش جدید ثبت نکنید.",
-      );
-      setBusy(false);
-      return;
-    }
-
-    // Failed / unknown
-    setError(message || "پرداخت با بالون ناموفق بود.");
+    // Inconclusive (invalid/expired OTP or an ambiguous/timed-out settle) or a
+    // transport error: credit MAY have been captured, so stay on THIS intent and
+    // let the user retry — never send them back to create a new order. The
+    // previous OTP is consumed, so allow an immediate resend.
+    setOtp("");
+    setCooldown(0);
+    setError(
+      "کد تایید نامعتبر است یا وضعیت پرداخت نامشخص است. لطفاً کد را دوباره وارد کنید یا «ارسال مجدد کد» را بزنید. سفارش جدید ثبت نکنید.",
+    );
     setBusy(false);
   }
 
