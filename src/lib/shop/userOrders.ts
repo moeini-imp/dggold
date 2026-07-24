@@ -13,6 +13,7 @@ export interface UserOrder {
   statusId: number;
   statusName: string;
   trackCode: string;
+  deliveryCode: number;
   totalPrice: number;
   addressTitle: string;
   address: string;
@@ -34,6 +35,7 @@ function normOrder(o: Raw): UserOrder {
     statusId: num(o.statusId),
     statusName: String(o.statusName ?? ""),
     trackCode: String(o.trackCode ?? ""),
+    deliveryCode: num(o.deliveryCode),
     totalPrice: num(o.totalPrice),
     addressTitle: String(addr.title ?? ""),
     address: String(addr.address ?? ""),

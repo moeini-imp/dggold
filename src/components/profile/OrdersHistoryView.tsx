@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { ChevronLeft, PackageIcon } from "@/components/ui/icons";
+import { ChevronLeft, PackageIcon, TruckIcon } from "@/components/ui/icons";
 import { formatToman, toPersianDigits } from "@/lib/format";
 import { getOrderHistory, type UserOrder } from "@/lib/shop/userOrders";
 
@@ -83,11 +83,22 @@ export function OrdersHistoryView() {
               className="block rounded-card bg-surface p-4 shadow-card transition hover:shadow-pop"
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span
-                  className={`rounded-full px-3 py-1 text-xs font-bold ${statusTone(o.statusName)}`}
-                >
-                  {o.statusName}
-                </span>
+                <div className="flex items-center gap-2">
+                  {o.deliveryCode ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-3 py-1 text-xs font-bold text-success ring-1 ring-inset ring-success/20">
+                      <TruckIcon className="h-3.5 w-3.5" />
+                      کد تحویل
+                      <span className="tnum">
+                        {toPersianDigits(o.deliveryCode)}
+                      </span>
+                    </span>
+                  ) : null}
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-bold ${statusTone(o.statusName)}`}
+                  >
+                    {o.statusName}
+                  </span>
+                </div>
                 <span className="text-xs text-muted tnum" dir="ltr">
                   {o.trackCode}
                 </span>
