@@ -15,6 +15,8 @@ export interface AddOrderPayload {
   buyerComment: string;
   paymentGatewayId: number;
   callbackUrl: string;
+  /** National code (کد ملی). Required by the shop for the Baloan credit gateway. */
+  nationalCode?: string;
   products: { id: number; quantity: number }[];
   /** Amounts drawn from the user's wallet balances (rial / gold). */
   walletAllocations?: WalletAllocation[];

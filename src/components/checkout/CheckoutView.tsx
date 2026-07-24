@@ -39,7 +39,11 @@ import {
   type WalletOverview,
 } from "@/lib/wallet/wallet";
 import { formatGranule, sootForToman } from "@/lib/wallet/granule";
+import { getUserInfo } from "@/lib/shop/user";
 import type { CartDisplayLine } from "@/lib/types";
+
+/** Gateway key of the Baloan credit gateway — the shop requires a national code for it. */
+const BALOAN_KEY = "Baloan";
 
 export function CheckoutView({
   gateways,
@@ -70,6 +74,8 @@ export function CheckoutView({
   const [wallet, setWallet] = useState<WalletOverview | null>(null);
   const [shippingId, setShippingId] = useState(shippingTypes[0]?.id ?? null);
   const [buyerComment, setBuyerComment] = useState("");
+  // National code (کد ملی) — required by the shop for the Baloan credit gateway.
+  const [nationalCode, setNationalCode] = useState("");
   const [submitted, setSubmitted] = useState(false);
   // Stable across retries so a repeated pay click can't create duplicate orders.
   const idempotencyKey = useRef<string>("");
@@ -145,6 +151,21 @@ export function CheckoutView({
     };
   }, [accessToken]);
 
+  // Best-effort prefill of the national code from the profile (editable below).
+  useEffect(() => {
+    if (!accessToken) return;
+    let active = true;
+    getUserInfo(accessToken).then((info) => {
+      if (!active || !info.nationalCode) return;
+      const digits = info.nationalCode.replace(/\D/g, "").slice(0, 10);
+      // Don't clobber anything the user already typed.
+      setNationalCode((prev) => prev || digits);
+    });
+    return () => {
+      active = false;
+    };
+  }, [accessToken]);
+
   // load provinces once authenticated
   useEffect(() => {
     if (!accessToken) return;
@@ -176,6 +197,8 @@ export function CheckoutView({
 
   // A credit/installment gateway prices the order with creditPrice, not cash.
   const useCredit = !!gateways.find((g) => g.key === gateway)?.isCredit;
+  const isBaloanSelected = gateway === BALOAN_KEY;
+  const nationalCodeValid = /^\d{10}$/.test(nationalCode);
   const itemsTotal = useMemo(
     () =>
       details.reduce(
@@ -268,6 +291,16 @@ export function CheckoutView({
       return;
     }
 
+    // The shop requires a national code for the Baloan credit gateway (and only
+    // when the gateway is actually used, i.e. the wallet didn't cover it all).
+    const paysWithBaloan =
+      gatewayId !== 0 &&
+      gateways.find((g) => g.id === gatewayId)?.key === BALOAN_KEY;
+    if (paysWithBaloan && !nationalCodeValid) {
+      setError("برای پرداخت با بالون، کد ملی ۱۰ رقمی را وارد کنید.");
+      return;
+    }
+
     setPaying(true);
     try {
       // Resolve the address id: use the selected saved one, or create the new one.
@@ -311,6 +344,7 @@ export function CheckoutView({
         paymentGatewayId: gatewayId,
         idempotencyKey: idempotencyKey.current,
         buyerComment: buyerComment.trim(),
+        ...(nationalCodeValid ? { nationalCode } : {}),
         // Backend redirects here after the gateway: /receipt/success?id=… or
         // /receipt/failed?id=…
         callbackUrl: `${window.location.origin}/receipt`,
@@ -710,6 +744,35 @@ export function CheckoutView({
                 );
               })}
             </div>
+
+            {/* Baloan requires the buyer's national code */}
+            {isBaloanSelected ? (
+              <label className="mt-4 block">
+                <span className="mb-1.5 block text-sm font-medium text-ink">
+                  کد ملی
+                </span>
+                <input
+                  value={toPersianDigits(nationalCode)}
+                  onChange={(e) =>
+                    setNationalCode(
+                      toEnglishDigits(e.target.value).replace(/\D/g, "").slice(0, 10),
+                    )
+                  }
+                  inputMode="numeric"
+                  autoComplete="off"
+                  placeholder="۱۰ رقم"
+                  className="w-full rounded-btn border border-line bg-canvas px-4 py-3 text-sm outline-none transition focus:border-teal-400 tnum"
+                />
+                <span className="mt-1 block text-xs text-muted">
+                  برای پرداخت اعتباری بالون، کد ملی الزامی است.
+                </span>
+                {submitted && !nationalCodeValid ? (
+                  <span className="mt-1 block text-xs text-danger">
+                    کد ملی ۱۰ رقمی را وارد کنید
+                  </span>
+                ) : null}
+              </label>
+            ) : null}
           </section>
 
           {/* buyer note */}

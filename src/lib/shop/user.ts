@@ -3,6 +3,8 @@
 export interface ShopUserInfo {
   fullName: string | null;
   avatarUrl: string | null;
+  /** کد ملی — best-effort; may be empty if the profile doesn't carry it. */
+  nationalCode: string | null;
 }
 
 type Raw = Record<string, unknown>;
@@ -24,7 +26,7 @@ export async function getUserInfo(token: string): Promise<ShopUserInfo> {
     });
     const json = (await res.json()) as { success?: boolean; data?: unknown };
     if (!json?.success || !json.data || typeof json.data !== "object") {
-      return { fullName: null, avatarUrl: null };
+      return { fullName: null, avatarUrl: null, nationalCode: null };
     }
     const d = json.data as Raw;
     const first = str(d.firstName);
@@ -35,8 +37,10 @@ export async function getUserInfo(token: string): Promise<ShopUserInfo> {
       (first || last ? `${first} ${last}`.trim() : "") ||
       null;
     const avatarUrl = str(d.avatarUrl) || str(d.imageUrl) || str(d.avatar) || null;
-    return { fullName, avatarUrl };
+    const nationalCode =
+      str(d.nationalCode) || str(d.nationalId) || str(d.national_code) || null;
+    return { fullName, avatarUrl, nationalCode };
   } catch {
-    return { fullName: null, avatarUrl: null };
+    return { fullName: null, avatarUrl: null, nationalCode: null };
   }
 }
