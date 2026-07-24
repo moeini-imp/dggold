@@ -9,39 +9,38 @@ import {
   toEnglishDigits,
   toPersianDigits,
 } from "@/lib/format";
-import {
-  baloanCheckCredit,
-  baloanSendOtp,
-  baloanSettle,
-  type BaloanCreditInfo,
-} from "@/lib/wallet/baloan";
+import { baloanSendOtp, baloanSettle } from "@/lib/wallet/baloan";
 
 const RESEND_SECONDS = 90;
-const NATIONAL_ID = /^\d{10}$/;
 
 /**
- * On-site Baloan credit checkout — a standalone page the user lands on after the
- * (uniform) gateway redirect: `{FRONT}/baloan/checkout?paymentIntentId=…`. They
- * enter their national id, we check credit + send an SMS OTP, they enter it, and
- * we settle server-to-server against the already-created payment intent.
+ * Baloan OTP page — the user lands here after the (uniform) gateway redirect:
+ * `{FRONT}/baloan/checkout?paymentIntentId=…&amount=…`.
  *
- * The intent id comes from the URL (reload-safe, not PII). OTP is only ever sent
- * from a click handler (never an effect) so React 19 StrictMode / re-mounts can't
- * fire duplicate SMS. National id and OTP live in component state only — never in
- * the URL, storage, or logs.
+ * The wallet already verified the user's Baloan credit and sent the first OTP
+ * while creating the payment, so all that's left is: enter the code → settle.
+ * Settle is the "returned from the gateway" step — it drives the ledger
+ * settlement and publishes the order as paid.
+ *
+ * OTP is only ever sent from a click handler (never an effect) so React 19
+ * StrictMode / re-mounts can't fire duplicate SMS. The OTP lives in component
+ * state only; the national id never leaves the server (read from the token).
  */
-export function BaloanCheckout({ paymentIntentId }: { paymentIntentId: string }) {
+export function BaloanCheckout({
+  paymentIntentId,
+  amountToman,
+}: {
+  paymentIntentId: string;
+  amountToman: number;
+}) {
   const router = useRouter();
   const { accessToken, isAuthenticated, hydrated } = useAuth();
 
-  const [step, setStep] = useState<"id" | "otp">("id");
-  const [nationalId, setNationalId] = useState("");
   const [otp, setOtp] = useState("");
-  const [credit, setCredit] = useState<BaloanCreditInfo | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const [cooldown, setCooldown] = useState(0);
+  const [cooldown, setCooldown] = useState(RESEND_SECONDS);
 
   // Auth-guard the page: bounce unauthenticated users to login and back.
   useEffect(() => {
@@ -53,62 +52,23 @@ export function BaloanCheckout({ paymentIntentId }: { paymentIntentId: string })
     }
   }, [hydrated, isAuthenticated, paymentIntentId, router]);
 
-  // Resend cooldown ticker.
+  // Resend cooldown ticker (starts counting from arrival — the first OTP was
+  // already sent server-side).
   useEffect(() => {
     if (cooldown <= 0) return;
     const t = setTimeout(() => setCooldown((c) => c - 1), 1000);
     return () => clearTimeout(t);
   }, [cooldown]);
 
-  const idValid = NATIONAL_ID.test(nationalId);
   const otpValid = otp.length >= 4;
-
-  async function handleCheckAndSend() {
-    if (!accessToken || !idValid || busy) return;
-    setBusy(true);
-    setError("");
-    setNotice("");
-
-    const c = await baloanCheckCredit(accessToken, paymentIntentId, nationalId);
-    if (!c.ok || !c.info) {
-      setError(
-        persianError(c.errorMessage, "استعلام اعتبار ناموفق بود. دوباره تلاش کنید."),
-      );
-      setBusy(false);
-      return;
-    }
-    setCredit(c.info);
-    if (!c.info.sufficient) {
-      setError(
-        `اعتبار بالون شما کافی نیست. اعتبار شما ${formatToman(
-          c.info.userCreditToman,
-        )} و مبلغ لازم ${formatToman(c.info.requiredToman)} است.`,
-      );
-      setBusy(false);
-      return;
-    }
-
-    const s = await baloanSendOtp(accessToken, paymentIntentId, nationalId);
-    if (!s.ok) {
-      setError(
-        persianError(s.errorMessage, "ارسال کد تایید ناموفق بود. دوباره تلاش کنید."),
-      );
-      setBusy(false);
-      return;
-    }
-
-    setStep("otp");
-    setNotice("کد تایید به شماره موبایل ثبت‌شده در بالون پیامک شد.");
-    setCooldown(RESEND_SECONDS);
-    setBusy(false);
-  }
 
   async function handleResend() {
     if (!accessToken || busy || cooldown > 0) return;
     setBusy(true);
     setError("");
     setNotice("");
-    const s = await baloanSendOtp(accessToken, paymentIntentId, nationalId);
+
+    const s = await baloanSendOtp(accessToken, paymentIntentId);
     if (!s.ok) {
       setError(persianError(s.errorMessage, "ارسال مجدد کد ناموفق بود."));
       setBusy(false);
@@ -125,7 +85,7 @@ export function BaloanCheckout({ paymentIntentId }: { paymentIntentId: string })
     setError("");
     setNotice("");
 
-    const r = await baloanSettle(accessToken, paymentIntentId, nationalId, otp);
+    const r = await baloanSettle(accessToken, paymentIntentId, otp);
 
     // A network/proxy failure is ambiguous: credit MAY have been captured for
     // this intent. Stay on this screen and let the user retry the SAME intent —
@@ -149,7 +109,10 @@ export function BaloanCheckout({ paymentIntentId }: { paymentIntentId: string })
     }
 
     if (status === "OtpInvalid") {
+      // Also the normal follow-up to a Pending retry: the previous code was
+      // consumed, so allow an immediate resend rather than treating it as final.
       setOtp("");
+      setCooldown(0);
       setError(
         message ||
           "کد تایید نامعتبر است یا منقضی شده. کد جدید بگیرید و دوباره تلاش کنید.",
@@ -171,10 +134,6 @@ export function BaloanCheckout({ paymentIntentId }: { paymentIntentId: string })
     // Failed / unknown
     setError(message || "پرداخت با بالون ناموفق بود.");
     setBusy(false);
-  }
-
-  function handleCancel() {
-    router.push("/cart");
   }
 
   // Invalid entry (e.g. opened without an intent id) — nothing to settle.
@@ -200,59 +159,33 @@ export function BaloanCheckout({ paymentIntentId }: { paymentIntentId: string })
       <div className="rounded-card border border-line bg-surface p-6 shadow-sm">
         <h1 className="mb-1 text-lg font-bold text-ink">پرداخت اعتباری بالون</h1>
         <p className="mb-5 text-sm text-muted">
-          {step === "id"
-            ? "برای پرداخت با اعتبار بالون، کد ملی خود را وارد کنید."
-            : "کد تایید پیامک‌شده را وارد کنید."}
+          کد تایید به شماره موبایل ثبت‌شده در بالون پیامک شد. برای تکمیل پرداخت،
+          کد را وارد کنید.
         </p>
 
-        {credit ? (
-          <div className="mb-4 rounded-btn bg-canvas px-4 py-3 text-sm text-ink">
-            <div className="flex items-center justify-between">
-              <span className="text-muted">مبلغ قابل پرداخت</span>
-              <span className="font-bold tnum">
-                {formatToman(credit.requiredToman)}
-              </span>
-            </div>
-            <div className="mt-1 flex items-center justify-between">
-              <span className="text-muted">اعتبار بالون شما</span>
-              <span className="tnum">{formatToman(credit.userCreditToman)}</span>
-            </div>
+        {amountToman > 0 ? (
+          <div className="mb-4 flex items-center justify-between rounded-btn bg-canvas px-4 py-3 text-sm">
+            <span className="text-muted">مبلغ قابل پرداخت</span>
+            <span className="font-bold text-ink tnum">
+              {formatToman(amountToman)}
+            </span>
           </div>
         ) : null}
 
-        {step === "id" ? (
-          <label className="mb-4 block">
-            <span className="mb-1.5 block text-sm font-medium text-ink">کد ملی</span>
-            <input
-              value={toPersianDigits(nationalId)}
-              onChange={(e) =>
-                setNationalId(
-                  toEnglishDigits(e.target.value).replace(/\D/g, "").slice(0, 10),
-                )
-              }
-              inputMode="numeric"
-              autoComplete="off"
-              placeholder="۱۰ رقم"
-              className="w-full rounded-btn border border-line bg-canvas px-4 py-3 text-sm outline-none transition focus:border-teal-400 tnum"
-            />
-          </label>
-        ) : (
-          <label className="mb-2 block">
-            <span className="mb-1.5 block text-sm font-medium text-ink">کد تایید</span>
-            <input
-              value={toPersianDigits(otp)}
-              onChange={(e) =>
-                setOtp(
-                  toEnglishDigits(e.target.value).replace(/\D/g, "").slice(0, 8),
-                )
-              }
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              placeholder="کد پیامک‌شده"
-              className="w-full rounded-btn border border-line bg-canvas px-4 py-3 text-center text-lg tracking-widest outline-none transition focus:border-teal-400 tnum"
-            />
-          </label>
-        )}
+        <label className="mb-2 block">
+          <span className="mb-1.5 block text-sm font-medium text-ink">کد تایید</span>
+          <input
+            value={toPersianDigits(otp)}
+            onChange={(e) =>
+              setOtp(toEnglishDigits(e.target.value).replace(/\D/g, "").slice(0, 8))
+            }
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            autoFocus
+            placeholder="کد پیامک‌شده"
+            className="w-full rounded-btn border border-line bg-canvas px-4 py-3 text-center text-lg tracking-widest outline-none transition focus:border-teal-400 tnum"
+          />
+        </label>
 
         {error ? (
           <p className="mb-3 text-sm text-danger">{error}</p>
@@ -260,41 +193,30 @@ export function BaloanCheckout({ paymentIntentId }: { paymentIntentId: string })
           <p className="mb-3 text-sm text-teal-700">{notice}</p>
         ) : null}
 
-        {step === "id" ? (
+        <div className="space-y-3">
           <button
             type="button"
-            onClick={handleCheckAndSend}
-            disabled={!idValid || busy}
+            onClick={handleSettle}
+            disabled={!otpValid || busy}
             className="w-full rounded-btn bg-teal-600 px-6 py-3 text-sm font-bold text-surface transition hover:bg-teal-700 disabled:opacity-50"
           >
-            {busy ? "در حال بررسی…" : "بررسی اعتبار و دریافت کد تایید"}
+            {busy ? "در حال پرداخت…" : "پرداخت"}
           </button>
-        ) : (
-          <div className="space-y-3">
-            <button
-              type="button"
-              onClick={handleSettle}
-              disabled={!otpValid || busy}
-              className="w-full rounded-btn bg-teal-600 px-6 py-3 text-sm font-bold text-surface transition hover:bg-teal-700 disabled:opacity-50"
-            >
-              {busy ? "در حال پرداخت…" : "پرداخت"}
-            </button>
-            <button
-              type="button"
-              onClick={handleResend}
-              disabled={busy || cooldown > 0}
-              className="w-full rounded-btn border border-line px-6 py-2.5 text-sm font-medium text-ink transition hover:bg-canvas disabled:opacity-50"
-            >
-              {cooldown > 0
-                ? `ارسال مجدد کد (${toPersianDigits(String(cooldown))})`
-                : "ارسال مجدد کد"}
-            </button>
-          </div>
-        )}
+          <button
+            type="button"
+            onClick={handleResend}
+            disabled={busy || cooldown > 0}
+            className="w-full rounded-btn border border-line px-6 py-2.5 text-sm font-medium text-ink transition hover:bg-canvas disabled:opacity-50"
+          >
+            {cooldown > 0
+              ? `ارسال مجدد کد (${toPersianDigits(String(cooldown))})`
+              : "ارسال مجدد کد"}
+          </button>
+        </div>
 
         <button
           type="button"
-          onClick={handleCancel}
+          onClick={() => router.push("/cart")}
           disabled={busy}
           className="mt-4 block w-full text-center text-xs text-muted transition hover:text-ink disabled:opacity-50"
         >

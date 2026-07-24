@@ -8,22 +8,28 @@ export const metadata: Metadata = {
 
 /**
  * Standalone Baloan credit checkout. The wallet API redirects here (a uniform
- * gateway hand-off) with the payment intent id in the query, e.g.
- * /baloan/checkout?paymentIntentId=<guid>. The OTP flow runs client-side.
+ * gateway hand-off) after it has already checked the user's credit and sent the
+ * first OTP: /baloan/checkout?paymentIntentId=<guid>&amount=<toman>.
+ * `amount` is display-only — settle always uses the server-side amount.
  */
 export default async function BaloanCheckoutPage({
   searchParams,
 }: {
-  searchParams: Promise<{ paymentIntentId?: string }>;
+  searchParams: Promise<{ paymentIntentId?: string; amount?: string }>;
 }) {
-  const { paymentIntentId } = await searchParams;
+  const { paymentIntentId, amount } = await searchParams;
+  const amountToman = Number(amount);
+
   return (
     <Suspense
       fallback={
         <div className="py-24 text-center text-muted">در حال بارگذاری…</div>
       }
     >
-      <BaloanCheckout paymentIntentId={paymentIntentId ?? ""} />
+      <BaloanCheckout
+        paymentIntentId={paymentIntentId ?? ""}
+        amountToman={Number.isFinite(amountToman) ? amountToman : 0}
+      />
     </Suspense>
   );
 }

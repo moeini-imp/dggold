@@ -1,17 +1,14 @@
 /**
- * Baloan credit gateway (on-site BNPL / OTP) client — talks to our wallet
- * proxy, which forwards the bearer token to the wallet API. Unlike redirect
- * gateways, Baloan has no hosted page: the user enters their national id and
- * an SMS OTP here, and we settle server-to-server.
+ * Baloan credit gateway (on-site BNPL / OTP) client — talks to our wallet proxy,
+ * which forwards the bearer token to the wallet API.
  *
- * Flow: check-credit → send-otp → settle. All amounts are Toman.
+ * The credit check and the FIRST OTP happen server-side while the payment is
+ * created (the wallet does them inside GeneratePaymentUrl before redirecting
+ * here), so this page only needs to: resend an OTP, and settle.
+ *
+ * The national id is never sent from the client — the wallet reads it from the
+ * user's token claim.
  */
-
-export interface BaloanCreditInfo {
-  userCreditToman: number;
-  requiredToman: number;
-  sufficient: boolean;
-}
 
 /** status ∈ Succeeded | AlreadySucceeded | OtpInvalid | Failed | Pending */
 export interface BaloanSettleOutcome {
@@ -40,11 +37,6 @@ async function postBaloan(
   }
 }
 
-function num(v: unknown): number {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : 0;
-}
-
 /** Read the Persian error out of a DataResult-style envelope. */
 function envelopeError(raw: Record<string, unknown> | null): string | undefined {
   return (
@@ -54,38 +46,12 @@ function envelopeError(raw: Record<string, unknown> | null): string | undefined 
   );
 }
 
-export async function baloanCheckCredit(
-  token: string,
-  paymentIntentId: string,
-  nationalIdentifier: string,
-): Promise<{ ok: boolean; info?: BaloanCreditInfo; errorMessage?: string }> {
-  const raw = await postBaloan("check-credit", token, {
-    paymentIntentId,
-    nationalIdentifier,
-  });
-  if (raw && raw.success === true && raw.data) {
-    const d = raw.data as Record<string, unknown>;
-    return {
-      ok: true,
-      info: {
-        userCreditToman: num(d.userCreditToman),
-        requiredToman: num(d.requiredToman),
-        sufficient: d.sufficient === true,
-      },
-    };
-  }
-  return { ok: false, errorMessage: envelopeError(raw) };
-}
-
+/** Resend the OTP (the first one was sent when the payment was created). */
 export async function baloanSendOtp(
   token: string,
   paymentIntentId: string,
-  nationalIdentifier: string,
 ): Promise<{ ok: boolean; errorMessage?: string }> {
-  const raw = await postBaloan("send-otp", token, {
-    paymentIntentId,
-    nationalIdentifier,
-  });
+  const raw = await postBaloan("send-otp", token, { paymentIntentId });
   if (raw && raw.success === true) return { ok: true };
   return { ok: false, errorMessage: envelopeError(raw) };
 }
@@ -93,14 +59,9 @@ export async function baloanSendOtp(
 export async function baloanSettle(
   token: string,
   paymentIntentId: string,
-  nationalIdentifier: string,
   otp: string,
 ): Promise<{ ok: boolean; outcome?: BaloanSettleOutcome; errorMessage?: string }> {
-  const raw = await postBaloan("settle", token, {
-    paymentIntentId,
-    nationalIdentifier,
-    otp,
-  });
+  const raw = await postBaloan("settle", token, { paymentIntentId, otp });
   if (raw && raw.success === true && raw.data) {
     const d = raw.data as Record<string, unknown>;
     return {
