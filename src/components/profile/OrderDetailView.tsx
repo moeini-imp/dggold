@@ -30,7 +30,9 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
       .finally(() => setLoading(false));
   }, [accessToken, orderId]);
 
-  useEffect(load, [load]);
+  useEffect(() => {
+    queueMicrotask(() => load());
+  }, [load]);
 
   if (!hydrated || !isAuthenticated || loading) {
     return <div className="py-24 text-center text-muted">در حال بارگذاری…</div>;

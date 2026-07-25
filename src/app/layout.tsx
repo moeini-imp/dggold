@@ -9,6 +9,8 @@ import { CartModal } from "@/components/cart/CartModal";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { getCategoryTree, buildMockCategoryTree } from "@/lib/shop/category";
 
+export const dynamic = "force-dynamic";
+
 const vazir = Vazirmatn({
   variable: "--font-vazir",
   subsets: ["arabic", "latin"],
@@ -29,7 +31,9 @@ export default async function RootLayout({
   // Top-level categories for the header's category dropdown. `Category/List`
   // only returns leaf/mid-level categories (no roots), so the tree endpoint's
   // top-level nodes are the real root categories (طلا/سکه/نقره today).
-  const categories = await getCategoryTree().then((c) => c ?? buildMockCategoryTree());
+  const categories = await getCategoryTree().then((c) =>
+    c && c.length > 0 ? c : buildMockCategoryTree(),
+  );
 
   return (
     <html lang="fa" dir="rtl" className={`${vazir.variable} h-full`}>

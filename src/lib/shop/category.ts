@@ -175,31 +175,96 @@ export function buildMockCategories(): ShopCategory[] {
   return [...parents, ...children];
 }
 
-/** Mock fallback for the /categories tree page — mirrors Category/Tree's shape. */
+/** Mock fallback for the /categories tree page — mirrors Category/Tree's 3-layer shape. */
 export function buildMockCategoryTree(): CategoryTreeNode[] {
   return [
-    { id: 11, name: "سکه بهار آزادی", imageUrl: "", children: [] },
     {
       id: 1,
       name: "مصنوعات طلا",
       imageUrl: "",
       children: [
-        { id: 6, name: "دستبند", imageUrl: "", children: [] },
-        { id: 7, name: "النگو", imageUrl: "", children: [] },
-        { id: 8, name: "گردنبند", imageUrl: "", children: [] },
-        { id: 9, name: "بچگانه", imageUrl: "", children: [] },
-        { id: 10, name: "اسپورت", imageUrl: "", children: [] },
+        {
+          id: 101,
+          name: "طلا زنانه",
+          imageUrl: "",
+          children: [
+            { id: 6, name: "دستبند طلا", imageUrl: "", children: [] },
+            { id: 7, name: "النگو طلا", imageUrl: "", children: [] },
+            { id: 8, name: "گردنبند طلا", imageUrl: "", children: [] },
+            { id: 102, name: "گوشواره طلا", imageUrl: "", children: [] },
+            { id: 103, name: "انگشتر طلا", imageUrl: "", children: [] },
+          ],
+        },
+        {
+          id: 104,
+          name: "طلا مردانه و کادویی",
+          imageUrl: "",
+          children: [
+            { id: 9, name: "طلا بچگانه", imageUrl: "", children: [] },
+            { id: 10, name: "طلا اسپورت", imageUrl: "", children: [] },
+            { id: 105, name: "پلاک و زنجیر", imageUrl: "", children: [] },
+          ],
+        },
       ],
     },
-    { id: 12, name: "سکه پارسیان", imageUrl: "", children: [] },
-    { id: 14, name: "طلای آبشده", imageUrl: "", children: [] },
+    {
+      id: 2,
+      name: "سکه و شمش",
+      imageUrl: "",
+      children: [
+        {
+          id: 106,
+          name: "سکه بهار آزادی",
+          imageUrl: "",
+          children: [
+            { id: 11, name: "سکه طرح جدید (امامی)", imageUrl: "", children: [] },
+            { id: 107, name: "نیم سکه بهار آزادی", imageUrl: "", children: [] },
+            { id: 108, name: "ربع سکه بهار آزادی", imageUrl: "", children: [] },
+          ],
+        },
+        {
+          id: 109,
+          name: "سکه پارسیان و کادویی",
+          imageUrl: "",
+          children: [
+            { id: 12, name: "سکه پارسیان", imageUrl: "", children: [] },
+            { id: 110, name: "کارت کادویی طلا", imageUrl: "", children: [] },
+          ],
+        },
+        {
+          id: 111,
+          name: "طلای سرمایه‌گذاری",
+          imageUrl: "",
+          children: [
+            { id: 13, name: "شمش طلا", imageUrl: "", children: [] },
+            { id: 14, name: "طلای آبشده", imageUrl: "", children: [] },
+          ],
+        },
+      ],
+    },
     {
       id: 3,
       name: "نقره",
       imageUrl: "",
       children: [
-        { id: 15, name: "شمش نقره", imageUrl: "", children: [] },
-        { id: 16, name: "مصنوعات نقره", imageUrl: "", children: [] },
+        {
+          id: 112,
+          name: "شمش و ساچمه نقره",
+          imageUrl: "",
+          children: [
+            { id: 15, name: "شمش نقره", imageUrl: "", children: [] },
+            { id: 113, name: "ساچمه نقره ۹۹۹", imageUrl: "", children: [] },
+          ],
+        },
+        {
+          id: 114,
+          name: "مصنوعات و زیورآلات نقره",
+          imageUrl: "",
+          children: [
+            { id: 16, name: "مصنوعات نقره", imageUrl: "", children: [] },
+            { id: 115, name: "انگشتر و زیورآلات نقره", imageUrl: "", children: [] },
+          ],
+        },
       ],
     },
   ];

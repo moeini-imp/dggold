@@ -12,40 +12,42 @@ function FallbackIcon() {
 }
 
 /** Homepage category icon row — the first-level children of the category tree
- *  (not the root/parent nodes), 92×92 tiles; centered when they fit, scrolls
- *  once there are more. Falls back to the roots if none have children. */
+ *  (not the root/parent nodes), 92×92 tiles; centered on the page when they fit or scroll. */
 export function HomeCategories({ categories }: { categories: CategoryTreeNode[] }) {
   const children = categories.flatMap((c) => c.children);
   const items = children.length ? children : categories;
   if (!items.length) return null;
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-7 md:px-8">
-      <HScroller className="pb-1" centerWhenFits>
-        {items.map((c) => (
-          <Link
-            key={c.id}
-            href={`/category/${encodeURIComponent(c.name)}?cid=${c.id}`}
-            className="flex w-[104px] shrink-0 flex-col items-center gap-3 text-center"
-          >
-            <span className="grid h-[92px] w-[92px] place-items-center overflow-hidden rounded-[20px] border border-line bg-surface shadow-card">
-              {c.imageUrl && !c.imageUrl.startsWith("placeholder:") ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={c.imageUrl}
-                  alt={c.name}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <FallbackIcon />
-              )}
-            </span>
-            <span className="w-full truncate text-[13px] font-semibold text-ink">
-              {c.name}
-            </span>
-          </Link>
-        ))}
-      </HScroller>
+    <section className="mx-auto max-w-7xl px-4 py-6 md:px-8">
+      <div className="flex w-full items-center justify-center">
+        <HScroller className="pb-1" centerWhenFits>
+          {items.map((c) => (
+            <Link
+              key={c.id}
+              href={`/category/${encodeURIComponent(c.name)}?cid=${c.id}`}
+              className="group flex w-[100px] shrink-0 flex-col items-center gap-2.5 text-center transition-transform hover:-translate-y-1"
+            >
+              <span className="grid h-[88px] w-[88px] place-items-center overflow-hidden rounded-[22px] border border-line bg-surface shadow-xs transition-all group-hover:border-teal-500 group-hover:shadow-card">
+                {c.imageUrl && !c.imageUrl.startsWith("placeholder:") ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={c.imageUrl}
+                    alt={c.name}
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                ) : (
+                  <FallbackIcon />
+                )}
+              </span>
+              <span className="w-full truncate text-xs font-bold text-ink group-hover:text-teal-700 transition">
+                {c.name}
+              </span>
+            </Link>
+          ))}
+        </HScroller>
+      </div>
     </section>
   );
 }
+

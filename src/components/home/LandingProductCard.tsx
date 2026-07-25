@@ -7,15 +7,6 @@ import { CartIcon } from "@/components/ui/icons";
 import { formatToman, toPersianDigits } from "@/lib/format";
 import type { LandingProduct } from "@/lib/shop/landing";
 
-/**
- * Product card used everywhere a real product list renders (home page
- * backend-composed sections, discounts, category pages, vendor minisite,
- * PDP related products). Adds straight to cart and opens the cart modal,
- * same as the product detail page — which already keys its cart line on
- * `vendor?.id ?? 0`, since not every real product has a vendor assigned.
- * We follow that same established fallback here rather than only allowing
- * add-to-cart where a vendor happens to be present.
- */
 export function LandingProductCard({ product }: { product: LandingProduct }) {
   const { add, openModal } = useCart();
   const href = product.slug
@@ -24,7 +15,9 @@ export function LandingProductCard({ product }: { product: LandingProduct }) {
   const hasDiscount =
     product.discountPercent > 0 && product.finalPrice < product.totalPrice;
 
-  const handleAdd = () => {
+  const handleAdd = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     add(String(product.id), String(product.vendorId ?? 0), 1, {
       slug: product.slug,
       title: product.name,
@@ -39,42 +32,55 @@ export function LandingProductCard({ product }: { product: LandingProduct }) {
   };
 
   return (
-    <article className="group relative flex h-full flex-col gap-3.5 rounded-card border border-line bg-surface p-4 shadow-card transition hover:shadow-pop sm:p-5">
-      <Link href={href} className="flex flex-col gap-3.5">
-        {hasDiscount ? (
-          <span className="absolute left-3.5 top-3.5 z-10 rounded-lg bg-danger px-2 py-1 text-[11px] font-bold text-surface">
-            {toPersianDigits(product.discountPercent)}٪
-          </span>
-        ) : null}
-        <ProductImage
-          src={product.imageUrl}
-          alt={product.name}
-          className="aspect-square w-full rounded-xl bg-canvas"
-        />
-        <div>
-          <h3 className="line-clamp-2 min-h-[2.6em] text-sm font-bold leading-relaxed text-ink">
-            {product.name}
-          </h3>
-          {product.weight > 0 ? (
-            <span className="mt-1.5 inline-flex w-fit rounded-full bg-gold-100 px-2.5 py-0.5 text-[11px] font-medium text-gold-600">
-              {toPersianDigits(product.weight)} گرم
-            </span>
-          ) : null}
-        </div>
-      </Link>
+    <article className="group relative flex h-full flex-col justify-between rounded-2xl border border-line bg-surface p-3.5 shadow-xs transition-all duration-200 hover:-translate-y-1 hover:border-gold-300/60 hover:shadow-card sm:p-4">
+      <div>
+        <Link href={href} className="block space-y-3">
+          {/* Top Badges */}
+          <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-canvas p-3">
+            {hasDiscount ? (
+              <span className="absolute start-2.5 top-2.5 z-10 rounded-lg bg-danger px-2 py-0.5 text-[10px] font-bold text-surface shadow-xs">
+                {toPersianDigits(product.discountPercent)}٪ تخفیف
+              </span>
+            ) : null}
 
-      <div className="mt-auto flex items-end justify-between gap-2.5">
-        <Link href={href} className="min-w-0 flex-1" aria-label={product.name}>
+            {product.weight > 0 ? (
+              <span className="absolute end-2.5 top-2.5 z-10 rounded-lg bg-teal-950/80 text-gold-300 backdrop-blur-xs px-2 py-0.5 text-[10px] font-bold shadow-xs">
+                {toPersianDigits(product.weight)} گرم
+              </span>
+            ) : null}
+
+            <ProductImage
+              src={product.imageUrl}
+              alt={product.name}
+              className="h-full w-full object-contain transition duration-300 group-hover:scale-105"
+            />
+          </div>
+
+          {/* Title & Seller */}
+          <div className="space-y-1">
+            {product.vendorName ? (
+              <p className="text-[10px] font-semibold text-muted truncate">
+                {product.vendorName}
+              </p>
+            ) : null}
+            <h3 className="line-clamp-2 min-h-[2.5em] text-xs font-bold leading-relaxed text-ink group-hover:text-teal-700 transition">
+              {product.name}
+            </h3>
+          </div>
+        </Link>
+      </div>
+
+      {/* Pricing & Cart Action */}
+      <div className="mt-4 pt-3 border-t border-line/60 flex items-center justify-between gap-2">
+        <Link href={href} className="min-w-0 flex-1">
           {hasDiscount ? (
-            <p className="truncate text-[11px] text-muted line-through">
+            <p className="truncate text-[10px] text-muted line-through tnum">
               {formatToman(product.totalPrice, false)}
             </p>
           ) : null}
-          {/* number-only on mobile (narrow 2-col cards clip a full "… تومان");
-              the "تومان" suffix returns from sm up. */}
-          <p className="text-[13px] font-normal text-teal-700 sm:text-base">
+          <p className="text-xs font-extrabold text-teal-700 sm:text-sm tnum">
             {formatToman(product.finalPrice, false)}
-            <span className="hidden sm:inline"> تومان</span>
+            <span className="text-[10px] font-normal text-muted ms-1 hidden sm:inline">تومان</span>
           </p>
         </Link>
 
@@ -82,9 +88,9 @@ export function LandingProductCard({ product }: { product: LandingProduct }) {
           type="button"
           aria-label="افزودن به سبد خرید"
           onClick={handleAdd}
-          className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-teal-600 text-gold-300 transition hover:bg-teal-700"
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-teal-600 text-gold-300 transition hover:bg-teal-700 active:scale-95 shadow-xs"
         >
-          <CartIcon className="h-[18px] w-[18px]" />
+          <CartIcon className="h-4 w-4" />
         </button>
       </div>
     </article>

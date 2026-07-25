@@ -30,7 +30,7 @@ export function CheckoutSuccess() {
   const [order, setOrder] = useState<Order | null>(null);
 
   useEffect(() => {
-    setOrder(getOrder(code) ?? null);
+    queueMicrotask(() => setOrder(getOrder(code) ?? null));
   }, [code]);
 
   return (

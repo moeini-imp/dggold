@@ -1,57 +1,50 @@
+"use client";
+
 import { formatToman } from "@/lib/format";
 import type { AssetPrice } from "@/lib/shop/assetPrice";
 
-const CARDS: {
-  symbol: number;
-  label: string;
-  sub: string;
-  gradient: string;
-  round?: boolean;
-}[] = [
-  { symbol: 3, label: "قیمت طلا", sub: "طلای آب‌شده", gradient: "from-gold-200 to-gold-500" },
-  { symbol: 8, label: "قیمت نقره", sub: "هر گرم ۹۹۹.۹", gradient: "from-line to-muted", round: true },
-  { symbol: 5, label: "قیمت سکه", sub: "سکه امامی", gradient: "from-gold-200 via-gold-100 to-gold-500", round: true },
+const ITEMS = [
+  { symbol: 3, label: "طلای آب‌شده", sub: "هر گرم ۱۸ عیار", color: "bg-amber-400" },
+  { symbol: 5, label: "سکه امامی", sub: "طرح جدید", color: "bg-gold-500" },
+  { symbol: 8, label: "نقره ۹۹۹", sub: "هر گرم", color: "bg-slate-300" },
 ];
 
-/** Live gold/silver/coin price bar. Backend has no trend/% field, so no ▲/▼ pill. */
 export function LivePriceBar({ prices }: { prices: AssetPrice[] }) {
   const byId = new Map(prices.map((p) => [p.symbol, p]));
-  const cards = CARDS.map((c) => ({ ...c, price: byId.get(c.symbol) })).filter(
+  const cards = ITEMS.map((c) => ({ ...c, price: byId.get(c.symbol) })).filter(
     (c) => c.price,
   );
-  if (!cards.length) return null;
 
   return (
-    <section className="mx-auto max-w-7xl px-4 pt-3 md:px-8 md:pt-5">
-      {/* Compact 3-across on mobile (was 3 tall stacked cards eating the top of
-          the page); full horizontal card with icon/sub on sm+. */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-3">
-        {cards.map((c) => (
-          <div
-            key={c.symbol}
-            className="flex flex-col gap-1 rounded-card border border-line bg-surface px-2.5 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3.5 sm:px-5 sm:py-4"
-          >
-            <div className="flex items-center gap-2 sm:gap-3">
-              <span
-                className={`hidden h-9.5 w-9.5 shrink-0 bg-gradient-to-br sm:block ${c.gradient} ${
-                  c.round ? "rounded-full" : "rounded-[11px]"
-                }`}
-              />
-              <div className="flex flex-col">
-                <span className="text-[11px] text-muted sm:text-[13px]">
-                  {c.label}
-                </span>
-                <span className="hidden text-[11px] text-muted/70 sm:block">
-                  {c.sub}
+    <section className="bg-gradient-to-r from-teal-950 via-teal-900 to-teal-950 text-surface shadow-xs border-b border-gold-300/20">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-2 text-xs md:px-8">
+        {/* Live indicator + prices ticker */}
+        <div className="flex w-full items-center justify-between gap-3 md:gap-6 min-w-0 overflow-x-auto no-scrollbar py-0.5">
+          <div className="flex shrink-0 items-center gap-1.5 rounded-full bg-teal-800/80 px-2.5 py-1 text-[11px] font-medium text-gold-300 border border-gold-300/30">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+            </span>
+            <span>قیمت زنده بازار طلا و سکه</span>
+          </div>
+
+          <div className="flex items-center gap-5 md:gap-10 shrink-0">
+            {cards.map((c) => (
+              <div key={c.symbol} className="flex items-center gap-2 whitespace-nowrap">
+                <span className={`h-2 w-2 rounded-full ${c.color}`} />
+                <span className="text-teal-200/90 font-medium">{c.label}:</span>
+                <span className="font-extrabold text-gold-200 tnum">
+                  {formatToman(c.price!.price, false)}
+                  <span className="text-[10px] font-normal text-teal-300/80 ms-1">تومان</span>
                 </span>
               </div>
-            </div>
-            <span className="text-[11px] font-extrabold text-ink tnum sm:text-[17px]">
-              {formatToman(c.price!.price, false)}
-              <span className="hidden font-normal text-muted sm:inline"> تومان</span>
-            </span>
+            ))}
           </div>
-        ))}
+
+          <div className="hidden lg:block text-[11px] text-teal-300/80 font-medium">
+            بروزرسانی لحظه‌ای از اتحادیه طلا
+          </div>
+        </div>
       </div>
     </section>
   );

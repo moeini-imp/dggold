@@ -179,3 +179,10 @@ export const TrashIcon = (p: P) => (
     <path d="M10 11v6M14 11v6" />
   </svg>
 );
+
+export const CheckIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M20 6 9 17l-5-5" />
+  </svg>
+);
+

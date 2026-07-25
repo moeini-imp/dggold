@@ -99,12 +99,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // hydrate + refresh-if-expired on mount
   useEffect(() => {
     const s = load();
-    setSessionState(s);
-    if (s?.accessToken && isTokenExpired(s.accessToken)) {
-      refresh().finally(() => setHydrated(true));
-    } else {
-      setHydrated(true);
-    }
+    queueMicrotask(() => {
+      setSessionState(s);
+      if (s?.accessToken && isTokenExpired(s.accessToken)) {
+        refresh().finally(() => setHydrated(true));
+      } else {
+        setHydrated(true);
+      }
+    });
   }, [refresh]);
 
   const value = useMemo<AuthContextValue>(() => {

@@ -43,11 +43,18 @@ export async function getPaymentGateways(): Promise<PaymentGateway[] | null> {
     .sort((a, b) => a.orderIndex - b.orderIndex);
 }
 
-/** Fallback list (same shape) when the API is unreachable. */
+/** Fallback list (10+ partners) when the API is unreachable. */
 export function buildMockGateways(): PaymentGateway[] {
   return [
-    { id: 1, code: 14, orderIndex: 1, name: "درگاه پرداخت تارا", description: "پرداخت اعتباری و اقساطی تارا", key: "tara", isActive: true, isCredit: true, imageUrl: "" },
-    { id: 2, code: 2, orderIndex: 2, name: "پرداخت امن اسمارتیز", description: "پرداخت با کارت‌های عضو شتاب", key: "smartiz", isActive: true, isCredit: true, imageUrl: "" },
-    { id: 5, code: 5, orderIndex: 5, name: "درگاه هوشمند دیجی‌پی", description: "پرداخت اعتباری و اقساطی دیجی‌پی", key: "digipay", isActive: true, isCredit: true, imageUrl: "" },
+    { id: 1, code: 14, orderIndex: 1, name: "اعتبار بالون", description: "خرید اقساطی طلا بدون ضامن", key: "baloan", isActive: true, isCredit: true, imageUrl: "" },
+    { id: 2, code: 15, orderIndex: 2, name: "سامانه تارا", description: "اعتبار خرد و کیف پول تارا", key: "tara", isActive: true, isCredit: true, imageUrl: "" },
+    { id: 3, code: 5, orderIndex: 3, name: "دیجی‌پی", description: "پرداخت اعتباری و اقساطی دیجی‌پی", key: "digipay", isActive: true, isCredit: true, imageUrl: "" },
+    { id: 4, code: 16, orderIndex: 4, name: "ازکی‌وام", description: "تسهیلات خرید اقساطی آنلاین", key: "azkivam", isActive: true, isCredit: true, imageUrl: "" },
+    { id: 5, code: 17, orderIndex: 5, name: "کیپاد پاسارگاد", description: "کیف پول و خرید اعتباری کیپاد", key: "qpod", isActive: true, isCredit: true, imageUrl: "" },
+    { id: 6, code: 18, orderIndex: 6, name: "لندو", description: "وام و اعتبار خرید کالا و طلا", key: "lendo", isActive: true, isCredit: true, imageUrl: "" },
+    { id: 7, code: 19, orderIndex: 7, name: "پایا اعتباری", description: "درگاه اقساطی پایا", key: "paya", isActive: true, isCredit: true, imageUrl: "" },
+    { id: 8, code: 20, orderIndex: 8, name: "فرابوم", description: "زیرساخت پرداخت و کیف اعتباری", key: "faraboom", isActive: true, isCredit: true, imageUrl: "" },
+    { id: 9, code: 21, orderIndex: 9, name: "مانلی اعتباری", description: "سازمان‌ها و خریدهای اقساطی", key: "maneli", isActive: true, isCredit: true, imageUrl: "" },
+    { id: 10, code: 22, orderIndex: 10, name: "اعتبار خرد بانک", description: "درگاه اعتباری بانک‌های همکار", key: "bank_credit", isActive: true, isCredit: true, imageUrl: "" },
   ];
 }

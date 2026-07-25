@@ -56,7 +56,7 @@ export function CheckoutView({
 }) {
   const router = useRouter();
   const { lines, hydrated, clear } = useCart();
-  const { isAuthenticated, hydrated: authHydrated, phone, accessToken } =
+  const { isAuthenticated, hydrated: authHydrated, accessToken } =
     useAuth();
   const [details, setDetails] = useState<CartDisplayLine[]>([]);
 
@@ -79,12 +79,14 @@ export function CheckoutView({
   const [submitted, setSubmitted] = useState(false);
   // Stable across retries so a repeated pay click can't create duplicate orders.
   const idempotencyKey = useRef<string>("");
-  if (!idempotencyKey.current) {
-    idempotencyKey.current =
-      typeof crypto !== "undefined" && crypto.randomUUID
-        ? crypto.randomUUID()
-        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  }
+  useEffect(() => {
+    if (!idempotencyKey.current) {
+      idempotencyKey.current =
+        typeof crypto !== "undefined" && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `idempotency-${Math.random().toString(36).slice(2)}`;
+    }
+  }, []);
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState("");
   const [gatewayRedirect, setGatewayRedirect] = useState<AddOrderData | null>(
@@ -117,7 +119,7 @@ export function CheckoutView({
   useEffect(() => {
     if (!accessToken) return;
     let active = true;
-    setLoadingAddresses(true);
+    queueMicrotask(() => setLoadingAddresses(true));
     getAddresses(accessToken)
       .then((list) => {
         if (!active) return;
@@ -170,7 +172,7 @@ export function CheckoutView({
   useEffect(() => {
     if (!accessToken) return;
     let active = true;
-    setLoadingProvinces(true);
+    queueMicrotask(() => setLoadingProvinces(true));
     getProvinces(accessToken)
       .then((p) => active && setProvinces(p))
       .finally(() => active && setLoadingProvinces(false));
@@ -182,11 +184,11 @@ export function CheckoutView({
   // load cities when province changes
   useEffect(() => {
     if (!accessToken || !province) {
-      setCities([]);
+      queueMicrotask(() => setCities([]));
       return;
     }
     let active = true;
-    setLoadingCities(true);
+    queueMicrotask(() => setLoadingCities(true));
     getCities(accessToken, province.id)
       .then((c) => active && setCities(c))
       .finally(() => active && setLoadingCities(false));
@@ -238,7 +240,6 @@ export function CheckoutView({
   };
   const newAddressValid =
     !errors.province && !errors.city && !errors.address && !errors.postalCode;
-  const isValid = newMode ? newAddressValid : !!selectedAddress;
 
   async function handlePay() {
     setSubmitted(true);

@@ -54,26 +54,29 @@ function CardIcon({ className }: IconProps) {
 }
 
 const VALUES = [
-  { label: "تحویل فیزیکی در لحظه", Icon: BoltIcon },
-  { label: "ضمانت اصالت کالا و فاکتور رسمی", Icon: ShieldCheckIcon },
-  { label: "ارسال به تمام ایران", Icon: TruckIcon },
-  { label: "خرید اعتباری", Icon: CardIcon },
+  { label: "تحویل فیزیکی در لحظه", sub: "تحویل فوری با بیمه رسمی", Icon: BoltIcon },
+  { label: "ضمانت ۱۰۰٪ اصالت و عیار", sub: "فاکتور رسمی اتحادیه طلا", Icon: ShieldCheckIcon },
+  { label: "ارسال به تمام نقاط کشور", sub: "بسته‌بندی امن و بیمه‌شده", Icon: TruckIcon },
+  { label: "خرید اقساطی طلا", sub: "بیش از ۱۰ شریک اعتباری", Icon: CardIcon },
 ];
 
-/** Value props row — four circular icon badges (replaces the old delivery
- *  banner + about FAQ box). */
 export function HomeValues() {
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 md:px-8">
-      <div className="grid grid-cols-2 gap-x-4 gap-y-7 md:grid-cols-4">
-        {VALUES.map(({ label, Icon }) => (
-          <div key={label} className="flex flex-col items-center gap-3 text-center">
-            <span className="grid h-[68px] w-[68px] place-items-center rounded-full bg-gradient-to-br from-teal-600 to-teal-800 text-gold-300 shadow-card md:h-[76px] md:w-[76px]">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        {VALUES.map(({ label, sub, Icon }) => (
+          <div key={label} className="flex flex-col items-center gap-2.5 text-center p-4 rounded-2xl border border-line/80 bg-surface shadow-xs">
+            <span className="grid h-14 w-14 place-items-center rounded-2xl bg-teal-900 text-gold-300 shadow-xs md:h-16 md:w-16">
               <Icon className="h-7 w-7 md:h-8 md:w-8" />
             </span>
-            <span className="max-w-[150px] text-[13px] font-bold leading-snug text-ink md:text-sm">
-              {label}
-            </span>
+            <div className="min-w-0">
+              <span className="block text-xs font-extrabold text-ink md:text-sm">
+                {label}
+              </span>
+              <span className="block text-[11px] text-muted mt-0.5">
+                {sub}
+              </span>
+            </div>
           </div>
         ))}
       </div>

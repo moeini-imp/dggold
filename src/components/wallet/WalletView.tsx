@@ -84,7 +84,7 @@ export function WalletView({
   useEffect(() => {
     if (!accessToken) return;
     let active = true;
-    setLoading(true);
+    queueMicrotask(() => setLoading(true));
     getWalletOverview(accessToken)
       .then((o) => active && setOverview(o ?? buildMockWalletOverview()))
       .finally(() => active && setLoading(false));
@@ -97,7 +97,7 @@ export function WalletView({
   useEffect(() => {
     if (!accessToken) return;
     let active = true;
-    setTxLoading(true);
+    queueMicrotask(() => setTxLoading(true));
     getWalletTransactions(accessToken, selected)
       .then((p) => active && setTxs((p ?? buildMockTransactions()).items))
       .finally(() => active && setTxLoading(false));

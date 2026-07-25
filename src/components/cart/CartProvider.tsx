@@ -122,7 +122,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } catch {
       /* ignore */
     }
-    setHydrated(true);
+    queueMicrotask(() => setHydrated(true));
   }, []);
 
   // persist on change

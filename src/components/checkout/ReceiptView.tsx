@@ -41,7 +41,9 @@ export function ReceiptView({
   }, [orderId, accessToken]);
 
   useEffect(() => {
-    if (hydrated) load();
+    if (hydrated) {
+      queueMicrotask(() => load());
+    }
   }, [hydrated, load]);
 
   const ui = {
