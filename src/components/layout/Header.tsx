@@ -38,13 +38,6 @@ export function Header({ categories }: { categories: CategoryTreeNode[] }) {
             <CategoryMenu categories={categories} />
             <nav className="flex items-center gap-4 text-xs font-bold text-ink/80">
               <Link
-                href="/baloan/checkout"
-                className="flex items-center gap-1 text-teal-700 transition hover:text-teal-800"
-              >
-                <span className="rounded bg-teal-50 px-1.5 py-0.5 text-[10px] font-extrabold text-teal-700">ویژه</span>
-                خرید اقساطی
-              </Link>
-              <Link
                 href="/wallet"
                 className="transition hover:text-teal-700"
               >
