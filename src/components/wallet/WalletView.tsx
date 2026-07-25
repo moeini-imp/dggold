@@ -37,7 +37,8 @@ const ASSETS: AssetConf[] = [
 
 function formatBalance(amount: number, unit: "gram" | "toman"): string {
   if (unit === "gram") return `${toPersianDigits(amount)} میلی‌گرم`;
-  return formatToman(amount);
+  // The rial (IRR) balance comes from the backend in Rial; show it in Toman.
+  return formatToman(Math.round(amount / 10));
 }
 
 const isIncoming = (t: WalletTransaction) => t.transactionType === "واریز";
