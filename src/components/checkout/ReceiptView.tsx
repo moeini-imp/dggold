@@ -5,8 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { CheckoutSteps } from "@/components/checkout/CheckoutSteps";
-import { statusTone } from "@/components/profile/OrdersHistoryView";
-import { formatToman, toPersianDigits } from "@/lib/format";
+import { toPersianDigits } from "@/lib/format";
 import { trackOrder, type UserOrder } from "@/lib/shop/userOrders";
 
 /**
@@ -119,25 +118,6 @@ export function ReceiptView({
         </p>
       ) : order ? (
         <>
-          <section className="mt-4 rounded-card bg-surface p-4 shadow-card md:p-5">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <span
-                className={`rounded-full px-3 py-1 text-sm font-bold ${statusTone(order.statusName)}`}
-              >
-                {order.statusName}
-              </span>
-              <div className="text-left">
-                <p className="text-xs text-muted">کد پیگیری</p>
-                <p
-                  className="break-all text-sm font-medium text-ink tnum"
-                  dir="ltr"
-                >
-                  {order.trackCode}
-                </p>
-              </div>
-            </div>
-          </section>
-
           {order.address ? (
             <section className="mt-4 rounded-card bg-surface p-4 shadow-card md:p-5">
               <h2 className="mb-2 font-bold text-ink">آدرس تحویل</h2>
@@ -151,45 +131,6 @@ export function ReceiptView({
               </p>
             </section>
           ) : null}
-
-          <section className="mt-4 rounded-card bg-surface p-4 shadow-card md:p-5">
-            <h2 className="mb-3 font-bold text-ink">اقلام سفارش</h2>
-            <div className="divide-y divide-line">
-              {order.products.map((p, i) => (
-                <div key={i} className="flex gap-3 py-3 first:pt-0 last:pb-0">
-                  <span className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-canvas">
-                    {p.imageUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={p.imageUrl}
-                        alt={p.name}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : null}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="line-clamp-2 text-sm font-medium leading-relaxed text-ink">
-                      {p.name}
-                    </p>
-                    <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
-                      <span className="text-xs text-muted tnum">
-                        {toPersianDigits(p.quantity)} عدد
-                      </span>
-                      <span className="text-sm font-bold text-teal-700 tnum">
-                        {formatToman(p.price)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-3">
-              <span className="font-bold text-ink">مبلغ کل</span>
-              <span className="text-lg font-extrabold text-teal-700 tnum">
-                {formatToman(order.totalPrice)}
-              </span>
-            </div>
-          </section>
         </>
       ) : orderId ? (
         <div className="mt-4 flex flex-col items-center gap-3 rounded-card bg-surface p-6 text-center shadow-card">

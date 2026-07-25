@@ -14,6 +14,22 @@ export interface ProductVendor {
   imageUrl: string;
 }
 
+/** The same item offered by a different vendor — each is its own product record
+ *  (own `productId`/PDP). Excludes the current product's vendor. */
+export interface OtherVendor {
+  productId: number;
+  vendorId: number;
+  vendorName: string;
+  vendorEnglishName: string;
+  vendorLogoUrl: string;
+  weight: number;
+  cashPrice: number;
+  creditPrice: number;
+  laborFeePercent: number;
+  profitPercent: number;
+  countAvailable: number;
+}
+
 export interface ProductDetail {
   id: number;
   slug: string;
@@ -36,6 +52,7 @@ export interface ProductDetail {
   creditPrice: number; // price via a credit/installment gateway
   psychologicalOfferPriceRatio: number; // % used to fake a struck "original"
   vendor: ProductVendor | null;
+  otherVendors: OtherVendor[]; // same item from other vendors (empty if none)
   dynamicProperties: { title: string; value: string }[];
   similarProducts: LandingProduct[];
 }
@@ -61,6 +78,21 @@ function normDetail(d: Raw): ProductDetail {
     ? (d.dynamicProperties as Raw[]).map((p) => ({
         title: String(p.title ?? ""),
         value: String(p.value ?? ""),
+      }))
+    : [];
+  const otherVendors = Array.isArray(d.otherVendors)
+    ? (d.otherVendors as Raw[]).map((v) => ({
+        productId: num(v.productId),
+        vendorId: num(v.vendorId),
+        vendorName: String(v.vendorName ?? "").trim(),
+        vendorEnglishName: String(v.vendorEnglishName ?? ""),
+        vendorLogoUrl: String(v.vendorLogoUrl ?? ""),
+        weight: num(v.weight),
+        cashPrice: num(v.cashPrice),
+        creditPrice: num(v.creditPrice),
+        laborFeePercent: num(v.laborFeePercent),
+        profitPercent: num(v.profitPercent),
+        countAvailable: num(v.countAvailable),
       }))
     : [];
   return {
@@ -92,6 +124,7 @@ function normDetail(d: Raw): ProductDetail {
           imageUrl: String(vendorRaw.imageUrl ?? ""),
         }
       : null,
+    otherVendors,
     dynamicProperties: props,
     similarProducts: [],
   };
@@ -168,6 +201,34 @@ export function buildMockProductDetail(
       englishName: "Moein",
       imageUrl: "",
     },
+    otherVendors: [
+      {
+        productId: Number(id) + 1000,
+        vendorId: 2,
+        vendorName: "دیجی‌گلد",
+        vendorEnglishName: "dgGold",
+        vendorLogoUrl: "",
+        weight: 12,
+        cashPrice: 2489000000,
+        creditPrice: 2620000000,
+        laborFeePercent: 15,
+        profitPercent: 6,
+        countAvailable: 30,
+      },
+      {
+        productId: Number(id) + 2000,
+        vendorId: 3,
+        vendorName: "محسن گالری",
+        vendorEnglishName: "mohsenGallary",
+        vendorLogoUrl: "",
+        weight: 12,
+        cashPrice: 2575000000,
+        creditPrice: 2710000000,
+        laborFeePercent: 18,
+        profitPercent: 11,
+        countAvailable: 0,
+      },
+    ],
     dynamicProperties: [
       { title: "سایز", value: "متوسط" },
       { title: "جنسیت", value: "مردانه" },

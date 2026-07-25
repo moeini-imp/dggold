@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/components/cart/CartProvider";
 import { ProductGallery } from "@/components/product/ProductGallery";
+import { OtherVendors } from "@/components/product/OtherVendors";
 import { LandingProductCard } from "@/components/home/LandingProductCard";
 import { QtyStepper } from "@/components/ui/QtyStepper";
 import { ChevronDown, ChevronLeft, CartIcon, CheckIcon } from "@/components/ui/icons";
@@ -36,6 +37,12 @@ export function ProductDetailReal({
   );
   const finalPrice = offer.finalPrice;
   const originalPrice = offer.originalPrice || undefined;
+
+  // Cheapest in-stock offer from other vendors (drives the purchase-card teaser).
+  const inStockOthers = detail.otherVendors.filter((v) => v.countAvailable > 0);
+  const otherMinPrice = inStockOthers.length
+    ? Math.min(...inStockOthers.map((v) => v.cashPrice))
+    : 0;
 
   const meta: CartLineMeta = {
     slug: detail.slug,
@@ -196,6 +203,27 @@ export function ProductDetailReal({
                   ✓ با کیف پول
                 </span>
               </div>
+
+              {detail.otherVendors.length ? (
+                <a
+                  href="#other-vendors"
+                  className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-teal-700 hover:underline"
+                >
+                  <span>
+                    از {toPersianDigits(detail.otherVendors.length)} فروشنده دیگر
+                    {otherMinPrice ? (
+                      <>
+                        ، از{" "}
+                        <span className="tnum">
+                          {formatToman(otherMinPrice, false)}
+                        </span>{" "}
+                        تومان
+                      </>
+                    ) : null}
+                  </span>
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </a>
+              ) : null}
             </div>
 
             {/* Stepper if in cart */}
@@ -238,6 +266,9 @@ export function ProductDetailReal({
               </div>
             </div>
           </div>
+
+          {/* Other vendors offering this same item */}
+          <OtherVendors detail={detail} />
 
           {/* Granule Wallet Equivalent Card */}
           {granuleSoot > 0 ? (
