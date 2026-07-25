@@ -36,7 +36,7 @@ const ASSETS: AssetConf[] = [
 ];
 
 function formatBalance(amount: number, unit: "gram" | "toman"): string {
-  if (unit === "gram") return `${toPersianDigits(amount)} گرم`;
+  if (unit === "gram") return `${toPersianDigits(amount)} میلی‌گرم`;
   return formatToman(amount);
 }
 
