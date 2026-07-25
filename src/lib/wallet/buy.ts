@@ -7,6 +7,7 @@ export interface BuyGranulePayload {
   productSymbol: number; // 1 = GOLD24, 2 = GOLD18
   productGrossAmountInMg: number; // amount of granule in mg (= سوت)
   clientUnitPrice: number; // live per-gram price (Toman) of that symbol
+  nationalCode?: string; // کد ملی — required by the Baloan credit gateway
 }
 
 /**

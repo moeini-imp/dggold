@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CloseIcon } from "@/components/ui/icons";
 import { GatewayRedirect } from "@/components/checkout/GatewayRedirect";
 import { PaymentGatewayIcon } from "@/components/checkout/PaymentGatewayIcon";
@@ -19,10 +19,13 @@ import {
   granuleFeeRate,
 } from "@/lib/wallet/granule";
 import { buyGranule, sellGranule } from "@/lib/wallet/buy";
+import { getUserInfo } from "@/lib/shop/user";
 import type { AddOrderData } from "@/lib/shop/order";
 import type { PaymentGateway } from "@/lib/shop/payment";
 
 const PRESET_GRAMS = [0.5, 1, 2, 5];
+/** Gateway key of the Baloan credit gateway — needs the buyer's national code. */
+const BALOAN_KEY = "Baloan";
 
 export function GranuleTradeModal({
   mode,
@@ -48,10 +51,28 @@ export function GranuleTradeModal({
     price > 0 ? Math.round((MIN_GRANULE_SOOT / 1000) * price) : 0,
   );
   const [gatewayKey, setGatewayKey] = useState(gateways[0]?.key ?? "");
+  const [nationalCode, setNationalCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [redirect, setRedirect] = useState<AddOrderData | null>(null);
   const [sold, setSold] = useState<number | null>(null);
+
+  const isBaloan = isBuy && gatewayKey === BALOAN_KEY;
+  const nationalCodeValid = /^\d{10}$/.test(nationalCode);
+
+  // Best-effort prefill of the national code from the profile (only for Baloan).
+  useEffect(() => {
+    if (!isBaloan || !token) return;
+    let active = true;
+    getUserInfo(token).then((info) => {
+      if (!active || !info.nationalCode) return;
+      const digits = info.nationalCode.replace(/\D/g, "").slice(0, 10);
+      setNationalCode((prev) => prev || digits);
+    });
+    return () => {
+      active = false;
+    };
+  }, [isBaloan, token]);
 
   const setFromToman = (tv: number) => {
     setToman(tv);
@@ -70,7 +91,11 @@ export function GranuleTradeModal({
     : Math.max(0, currentGrams - soot / 1000);
 
   const overBalance = !isBuy && soot > Math.round(currentGrams * 1000);
-  const valid = soot >= MIN_GRANULE_SOOT && price > 0 && !overBalance;
+  const valid =
+    soot >= MIN_GRANULE_SOOT &&
+    price > 0 &&
+    !overBalance &&
+    (!isBaloan || nationalCodeValid);
 
   async function confirm() {
     if (soot < MIN_GRANULE_SOOT) {
@@ -98,6 +123,7 @@ export function GranuleTradeModal({
           productSymbol: 2,
           productGrossAmountInMg: soot,
           clientUnitPrice: price,
+          ...(isBaloan ? { nationalCode } : {}),
         });
         if (!res.ok) {
           setError(persianError(res.errorMessage, "ثبت خرید ناموفق بود."));
@@ -293,6 +319,32 @@ export function GranuleTradeModal({
                     );
                   })}
                 </div>
+
+                {/* Baloan requires the buyer's national code */}
+                {isBaloan ? (
+                  <div className="mt-3">
+                    <label className="mb-1.5 block text-sm font-medium text-ink">
+                      کد ملی
+                    </label>
+                    <input
+                      value={toPersianDigits(nationalCode)}
+                      onChange={(e) =>
+                        setNationalCode(
+                          toEnglishDigits(e.target.value)
+                            .replace(/\D/g, "")
+                            .slice(0, 10),
+                        )
+                      }
+                      inputMode="numeric"
+                      autoComplete="off"
+                      placeholder="۱۰ رقم"
+                      className="w-full rounded-btn border border-line bg-canvas px-4 py-3 text-sm outline-none transition focus:border-teal-400 tnum"
+                    />
+                    <span className="mt-1 block text-xs text-muted">
+                      برای پرداخت اعتباری بالون، کد ملی الزامی است.
+                    </span>
+                  </div>
+                ) : null}
               </>
             ) : null}
 
