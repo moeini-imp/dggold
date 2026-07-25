@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { LandingSliderImage } from "@/lib/shop/landing";
 
@@ -57,18 +57,69 @@ export function LandingSlider({ images }: { images: LandingSliderImage[] }) {
   const [active, setActive] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const drag = useRef({ active: false, startX: 0, moved: false });
+  // Autoplay bookkeeping (refs so the interval reads live values without restarting).
+  const activeRef = useRef(0);
+  const paused = useRef(false); // hover / focus
+  const inView = useRef(true);
+  const stopped = useRef(false); // permanently off once the user takes control
 
-  if (!images.length) return null;
+  useEffect(() => {
+    activeRef.current = active;
+  }, [active]);
 
-  const goTo = (i: number) => {
+  const goTo = (i: number, smooth = true) => {
     const el = scrollRef.current;
     if (!el) return;
     const clamped = Math.max(0, Math.min(images.length - 1, i));
-    el.scrollTo({ left: -clamped * el.clientWidth, behavior: "smooth" });
+    el.scrollTo({ left: -clamped * el.clientWidth, behavior: smooth ? "smooth" : "auto" });
   };
+
+  // Stops autoplay for the rest of the session — the user has chosen a slide.
+  const stopAutoplay = () => {
+    stopped.current = true;
+  };
+
+  // Auto-advance every 6s. Skips while hovered/focused, offscreen, tab hidden,
+  // or when the user prefers reduced motion; halts permanently on interaction.
+  useEffect(() => {
+    if (images.length <= 1) return;
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return;
+    }
+
+    const el = scrollRef.current;
+    const io = el
+      ? new IntersectionObserver(
+          ([e]) => {
+            inView.current = e.isIntersecting;
+          },
+          { threshold: 0.5 },
+        )
+      : null;
+    if (el && io) io.observe(el);
+
+    const id = window.setInterval(() => {
+      if (stopped.current || paused.current || !inView.current || document.hidden) return;
+      const next = (activeRef.current + 1) % images.length;
+      // Wrap back to the first slide instantly instead of rewinding through all.
+      goTo(next, next !== 0);
+    }, 6000);
+
+    return () => {
+      window.clearInterval(id);
+      io?.disconnect();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [images.length]);
+
+  if (!images.length) return null;
 
   const onPointerDown = (e: React.PointerEvent) => {
     if (e.pointerType !== "mouse") return;
+    stopAutoplay();
     drag.current = { active: true, startX: e.clientX, moved: false };
   };
   const onPointerMove = (e: React.PointerEvent) => {
@@ -86,7 +137,13 @@ export function LandingSlider({ images }: { images: LandingSliderImage[] }) {
     <section className="mx-auto max-w-7xl px-4 pt-4 md:px-8 md:pt-6">
       <div className="grid gap-3.5 lg:grid-cols-[1fr_300px] lg:items-stretch">
         {/* Main Banner Slider */}
-        <div className="relative min-w-0">
+        <div
+          className="relative min-w-0"
+          onMouseEnter={() => (paused.current = true)}
+          onMouseLeave={() => (paused.current = false)}
+          onFocusCapture={() => (paused.current = true)}
+          onBlurCapture={() => (paused.current = false)}
+        >
           <div
             ref={scrollRef}
             className="no-scrollbar flex snap-x snap-mandatory select-none overflow-x-auto lg:cursor-grab lg:active:cursor-grabbing rounded-2xl"
@@ -97,6 +154,8 @@ export function LandingSlider({ images }: { images: LandingSliderImage[] }) {
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
+            onTouchStart={stopAutoplay}
+            onWheel={stopAutoplay}
             onPointerLeave={() => {
               drag.current.active = false;
             }}
@@ -123,7 +182,10 @@ export function LandingSlider({ images }: { images: LandingSliderImage[] }) {
                     key={i}
                     type="button"
                     aria-label={`رفتن به بنر ${i + 1}`}
-                    onClick={() => goTo(i)}
+                    onClick={() => {
+                      stopAutoplay();
+                      goTo(i);
+                    }}
                     className={`h-2 rounded-full transition-all ${
                       i === active ? "w-5 bg-gold-400" : "w-2 bg-white/40 hover:bg-white/70"
                     }`}

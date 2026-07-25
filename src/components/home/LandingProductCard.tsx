@@ -36,7 +36,7 @@ export function LandingProductCard({ product }: { product: LandingProduct }) {
       <div>
         <Link href={href} className="block space-y-3">
           {/* Top Badges */}
-          <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-canvas p-3">
+          <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-canvas">
             {hasDiscount ? (
               <span className="absolute start-2.5 top-2.5 z-10 rounded-lg bg-danger px-2 py-0.5 text-[10px] font-bold text-surface shadow-xs">
                 {toPersianDigits(product.discountPercent)}٪ تخفیف

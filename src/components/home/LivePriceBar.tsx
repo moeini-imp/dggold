@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { formatToman } from "@/lib/format";
 import type { AssetPrice } from "@/lib/shop/assetPrice";
 
@@ -9,7 +10,41 @@ const ITEMS = [
   { symbol: 8, label: "نقره ۹۹۹", sub: "هر گرم", color: "bg-slate-300" },
 ];
 
-export function LivePriceBar({ prices }: { prices: AssetPrice[] }) {
+export function LivePriceBar({ prices: initialPrices }: { prices: AssetPrice[] }) {
+  const [prices, setPrices] = useState(initialPrices);
+
+  // Refresh live prices every minute without a page reload. Skips while the tab
+  // is hidden and fetches once on becoming visible again.
+  useEffect(() => {
+    let cancelled = false;
+
+    const refresh = async () => {
+      if (document.hidden) return;
+      try {
+        const res = await fetch("/api/asset-prices", { cache: "no-store" });
+        if (!res.ok) return;
+        const json = (await res.json()) as { data?: AssetPrice[] };
+        if (!cancelled && Array.isArray(json.data) && json.data.length) {
+          setPrices(json.data);
+        }
+      } catch {
+        // transient network error — keep showing the last known prices
+      }
+    };
+
+    const id = window.setInterval(refresh, 60_000);
+    const onVisible = () => {
+      if (!document.hidden) refresh();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, []);
+
   const byId = new Map(prices.map((p) => [p.symbol, p]));
   const cards = ITEMS.map((c) => ({ ...c, price: byId.get(c.symbol) })).filter(
     (c) => c.price,

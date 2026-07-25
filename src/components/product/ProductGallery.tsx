@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ProductImage } from "@/components/ui/ProductImage";
 
-/** Enhanced Product Gallery with badge overlays, zoom preview, and thumb selection */
+/** Enhanced Product Gallery with badge overlays and thumb selection */
 export function ProductGallery({
   images,
   alt,
@@ -16,7 +16,6 @@ export function ProductGallery({
   weight?: number;
 }) {
   const [active, setActive] = useState(0);
-  const [showZoom, setShowZoom] = useState(false);
   const list = images.length ? images : [];
   const current = list[active] ?? list[0];
 
@@ -37,16 +36,6 @@ export function ProductGallery({
             </span>
           ) : null}
         </div>
-
-        {/* Zoom trigger */}
-        <button
-          type="button"
-          onClick={() => setShowZoom(true)}
-          className="absolute end-3 top-3 z-10 grid h-8 w-8 place-items-center rounded-lg bg-surface/80 text-ink/70 opacity-0 transition group-hover:opacity-100 hover:bg-surface hover:text-ink shadow-xs"
-          title="بزرگ‌نمایی تصویر"
-        >
-          🔍
-        </button>
 
         <div className="aspect-square w-full grid place-items-center">
           <ProductImage
@@ -82,31 +71,6 @@ export function ProductGallery({
           ))}
         </div>
       ) : null}
-
-      {/* Fullscreen Zoom Modal */}
-      {showZoom && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200"
-          onClick={() => setShowZoom(false)}
-        >
-          <div className="relative max-w-2xl w-full p-4" onClick={(e) => e.stopPropagation()}>
-            <button
-              type="button"
-              onClick={() => setShowZoom(false)}
-              className="absolute -top-10 end-2 text-white text-xl font-bold hover:text-gold-300"
-            >
-              ✕ بستن
-            </button>
-            <div className="bg-surface rounded-2xl p-6 shadow-pop border border-line">
-              <ProductImage
-                src={current}
-                alt={alt}
-                className="w-full max-h-[80vh] object-contain rounded-xl"
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

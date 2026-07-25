@@ -35,7 +35,7 @@ export function HomePaymentGateways({
               title={g.description || g.name}
               className="flex flex-col items-center justify-between gap-2.5 rounded-xl border border-line/80 bg-canvas/60 p-3.5 transition hover:border-teal-300 hover:bg-surface hover:shadow-card w-36 md:w-40 shrink-0"
             >
-              <div className="grid aspect-square h-12 w-12 place-items-center rounded-xl bg-teal-900 text-gold-300 font-extrabold text-base shadow-xs">
+              <div className="grid aspect-square h-12 w-12 place-items-center overflow-hidden rounded-xl border border-line bg-white text-teal-900/40 font-extrabold text-base shadow-xs">
                 {g.imageUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
