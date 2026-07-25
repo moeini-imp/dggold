@@ -219,8 +219,10 @@ export function LandingSlider({ images }: { images: LandingSliderImage[] }) {
             </div>
           </Link>
 
-          <Link
-            href="/baloan/checkout"
+          <a
+            href="https://baloan.ir/"
+            target="_blank"
+            rel="noopener noreferrer"
             className="group flex flex-1 min-h-0 flex-col justify-between rounded-2xl bg-gradient-to-br from-teal-900 to-teal-950 p-4 border border-teal-800 text-surface shadow-xs transition hover:shadow-card hover:border-teal-600"
           >
             <div className="min-h-0">
@@ -238,7 +240,7 @@ export function LandingSlider({ images }: { images: LandingSliderImage[] }) {
               <span>دریافت اعتبار اقساطی</span>
               <span className="text-sm transition-transform group-hover:-translate-x-1">←</span>
             </div>
-          </Link>
+          </a>
         </div>
       </div>
     </section>

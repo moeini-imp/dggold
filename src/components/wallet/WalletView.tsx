@@ -143,7 +143,7 @@ export function WalletView({
         />
         <div className="relative flex items-start justify-between">
           <div>
-            <p className="text-sm text-teal-100">موجودی {active.name}</p>
+            <p className="text-sm text-teal-100">موجودی</p>
             <p className="mt-2 text-3xl font-extrabold tnum">
               {loading ? "—" : formatBalance(activeBalance, active.unit)}
             </p>
@@ -206,7 +206,7 @@ export function WalletView({
                 <span
                   className={`text-xs ${on ? "font-bold text-gold-300" : "text-teal-100"}`}
                 >
-                  {a.name}
+                  {a.code === "IRR" ? "موجودی" : a.name}
                 </span>
                 <span className="text-[11px] tnum text-teal-100/80">
                   {loading ? "—" : formatBalance(assetAmount(data, a.code), a.unit)}
